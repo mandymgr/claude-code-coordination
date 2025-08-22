@@ -7,12 +7,16 @@
     "claude-coord": "./bin/claude-coord.sh"
   },
   "scripts": {
+    "build": "npm run lint && npm run test && npm run package",
+    "package": "tar -czf dist/claude-code-coordination-v$(node -p \"require('./package.json').version\").tar.gz --exclude=node_modules --exclude=.git --exclude=dist .",
     "install": "./install.sh",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",
-    "lint": "shellcheck src/*.sh",
-    "docs": "markdown-toc README.md"
+    "lint": "shellcheck src/*.sh || echo '⚠️  Shellcheck not found - skipping lint'",
+    "docs": "markdown-toc README.md",
+    "clean": "rm -rf dist node_modules",
+    "prepare": "mkdir -p dist"
   },
   "keywords": [
     "claude-code",

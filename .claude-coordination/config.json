@@ -1,0 +1,16 @@
+{
+  "project_name": "claude-code-coordination",
+  "project_root": "/Users/mandymarigjervikrygg/Desktop/claude-code-coordination",
+  "coordination_enabled": true,
+  "session_timeout_hours": 2,
+  "message_retention_hours": 24,
+  "lock_timeout_minutes": 30,
+  "cleanup_interval_minutes": 5,
+  "features": {
+    "file_locking": true,
+    "inter_session_messaging": true,
+    "context_sharing": true,
+    "task_coordination": true,
+    "automatic_cleanup": true
+  }
+}
