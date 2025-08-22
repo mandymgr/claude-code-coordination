@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Coordination Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #fff, #a8dadc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1rem;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4ade80;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 0.25rem;
+        }
+
+        .session-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .session-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+
+        .session-item.zombie {
+            border-left-color: #ef4444;
+        }
+
+        .session-item.stale {
+            border-left-color: #f59e0b;
+        }
+
+        .session-info {
+            flex: 1;
+        }
+
+        .session-id {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .session-task {
+            margin-top: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .session-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-healthy {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-zombie {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .status-stale {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .last-updated {
+            text-align: center;
+            margin-top: 2rem;
+            opacity: 0.6;
+            font-size: 0.9rem;
+        }
+
+        .no-sessions {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0.8;
+        }
+
+        .file-locks {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .lock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            margin-bottom: 0.25rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .file-name {
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: #a8dadc;
+        }
+
+        .lock-session {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Claude Code Coordination</h1>
+        <p>Real-time Multi-Terminal Session Dashboard</p>
+    </div>
+
+    <div class="controls">
+        <button class="btn" onclick="refreshData()">🔄 Refresh</button>
+        <button class="btn btn-danger" onclick="cleanupSessions()">🧹 Cleanup Zombies</button>
+        <button class="btn" onclick="toggleAutoRefresh()" id="autoRefreshBtn">⏰ Auto-Refresh: OFF</button>
+    </div>
+
+    <div class="dashboard">
+        <!-- Statistics Card -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">📊</span>
+                <span class="card-title">System Statistics</span>
+            </div>
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalSessions">-</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="activeSessions">-</div>
+                    <div class="stat-label">Active</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="zombieSessions">-</div>
+                    <div class="stat-label">Zombies</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalLocks">-</div>
+                    <div class="stat-label">File Locks</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Sessions Card -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">👥</span>
+                <span class="card-title">Active Sessions</span>
+            </div>
+            <div class="session-list" id="sessionList">
+                <div class="loading">
+                    <span class="spinner"></span>
+                    Loading sessions...
+                </div>
+            </div>
+        </div>
+
+        <!-- File Locks Card -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">🔒</span>
+                <span class="card-title">File Locks</span>
+            </div>
+            <div class="file-locks" id="fileLocks">
+                <div class="loading">
+                    <span class="spinner"></span>
+                    Loading locks...
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Info Card -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">📁</span>
+                <span class="card-title">Project Information</span>
+            </div>
+            <div id="projectInfo">
+                <div class="loading">
+                    <span class="spinner"></span>
+                    Loading project data...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="last-updated">
+        Last updated: <span id="lastUpdated">Never</span>
+    </div>
+
+    <script>
+        let autoRefreshInterval = null;
+        let isAutoRefresh = false;
+
+        // Load coordination data
+        async function loadCoordinationData() {
+            try {
+                // In a real implementation, this would fetch from a server
+                // For now, we'll simulate loading system.json data
+                const response = await fetch('.claude-coordination/system.json');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Failed to load coordination data:', error);
+                // Return mock data for demonstration
+                return generateMockData();
+            }
+        }
+
+        // Generate mock data for demonstration
+        function generateMockData() {
+            return {
+                version: "2.0.0",
+                sessions: {},
+                locks: {},
+                activeFiles: {},
+                sharedState: {
+                    currentTasks: [],
+                    projectSettings: {
+                        frontend_port: 5173,
+                        backend_port: 3001,
+                        database_port: 5555
+                    }
+                },
+                lastUpdated: Date.now()
+            };
+        }
+
+        // Update statistics
+        function updateStats(data) {
+            const sessions = Object.values(data.sessions || {});
+            const locks = Object.keys(data.locks || {});
+            
+            const activeSessions = sessions.filter(s => s.status !== 'zombie').length;
+            const zombieSessions = sessions.filter(s => s.status === 'zombie').length;
+
+            document.getElementById('totalSessions').textContent = sessions.length;
+            document.getElementById('activeSessions').textContent = activeSessions;
+            document.getElementById('zombieSessions').textContent = zombieSessions;
+            document.getElementById('totalLocks').textContent = locks.length;
+        }
+
+        // Update session list
+        function updateSessionList(data) {
+            const sessionList = document.getElementById('sessionList');
+            const sessions = Object.values(data.sessions || {});
+
+            if (sessions.length === 0) {
+                sessionList.innerHTML = `
+                    <div class="no-sessions">
+                        <p>🎉 No active sessions</p>
+                        <p>System is clean and ready!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const sessionHTML = sessions.map(session => {
+                const age = Math.round((Date.now() - session.startTime) / 60000);
+                const statusClass = session.status || 'healthy';
+                const task = session.currentTask?.description || 'No active task';
+                
+                return `
+                    <div class="session-item ${statusClass}">
+                        <div class="session-info">
+                            <div class="session-id">${session.id.substring(0, 12)}...</div>
+                            <div class="session-task">${task}</div>
+                        </div>
+                        <div class="session-status status-${statusClass}">
+                            ${statusClass.toUpperCase()}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            sessionList.innerHTML = sessionHTML;
+        }
+
+        // Update file locks
+        function updateFileLocks(data) {
+            const fileLocks = document.getElementById('fileLocks');
+            const locks = Object.entries(data.locks || {});
+
+            if (locks.length === 0) {
+                fileLocks.innerHTML = `
+                    <div class="no-sessions">
+                        <p>🔓 No file locks</p>
+                        <p>All files are available</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const locksHTML = locks.map(([filePath, lock]) => {
+                const fileName = filePath.split('/').pop();
+                const sessionId = lock.sessionId?.substring(0, 8) || 'unknown';
+                
+                return `
+                    <div class="lock-item">
+                        <div class="file-name">${fileName}</div>
+                        <div class="lock-session">${sessionId}...</div>
+                    </div>
+                `;
+            }).join('');
+
+            fileLocks.innerHTML = locksHTML;
+        }
+
+        // Update project info
+        function updateProjectInfo(data) {
+            const projectInfo = document.getElementById('projectInfo');
+            const settings = data.sharedState?.projectSettings || {};
+            
+            projectInfo.innerHTML = `
+                <div style="padding: 1rem 0;">
+                    <p><strong>Version:</strong> ${data.version || 'Unknown'}</p>
+                    <p><strong>Frontend Port:</strong> ${settings.frontend_port || 'Not set'}</p>
+                    <p><strong>Backend Port:</strong> ${settings.backend_port || 'Not set'}</p>
+                    <p><strong>Database Port:</strong> ${settings.database_port || 'Not set'}</p>
+                </div>
+            `;
+        }
+
+        // Refresh all data
+        async function refreshData() {
+            const data = await loadCoordinationData();
+            
+            updateStats(data);
+            updateSessionList(data);
+            updateFileLocks(data);
+            updateProjectInfo(data);
+            
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Cleanup sessions
+        async function cleanupSessions() {
+            if (confirm('Are you sure you want to cleanup zombie sessions?')) {
+                // In real implementation, this would call the session manager
+                alert('🧹 Cleanup functionality would be implemented here');
+                await refreshData();
+            }
+        }
+
+        // Toggle auto-refresh
+        function toggleAutoRefresh() {
+            const btn = document.getElementById('autoRefreshBtn');
+            
+            if (isAutoRefresh) {
+                clearInterval(autoRefreshInterval);
+                isAutoRefresh = false;
+                btn.textContent = '⏰ Auto-Refresh: OFF';
+                btn.style.background = 'linear-gradient(45deg, #10b981, #059669)';
+            } else {
+                autoRefreshInterval = setInterval(refreshData, 5000); // Refresh every 5 seconds
+                isAutoRefresh = true;
+                btn.textContent = '⏰ Auto-Refresh: ON';
+                btn.style.background = 'linear-gradient(45deg, #f59e0b, #d97706)';
+            }
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshData();
+            
+            // Auto-refresh every 30 seconds by default
+            // setInterval(refreshData, 30000);
+        });
+    </script>
+</body>
+</html>
