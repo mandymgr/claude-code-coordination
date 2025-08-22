@@ -1,0 +1,48 @@
+{
+  "name": "claude-code-coordination",
+  "version": "1.0.0",
+  "description": "Complete coordination system for multiple Claude Code terminal instances",
+  "main": "src/coordinator.js",
+  "bin": {
+    "claude-coord": "./bin/claude-coord.sh"
+  },
+  "scripts": {
+    "install": "./install.sh",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "lint": "shellcheck src/*.sh",
+    "docs": "markdown-toc README.md"
+  },
+  "keywords": [
+    "claude-code",
+    "coordination",
+    "terminal",
+    "collaboration",
+    "file-locking",
+    "session-management"
+  ],
+  "author": "Claude Code Community",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anthropics/claude-code-coordination.git"
+  },
+  "bugs": {
+    "url": "https://github.com/anthropics/claude-code-coordination/issues"
+  },
+  "homepage": "https://github.com/anthropics/claude-code-coordination#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "markdown-toc": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "preferGlobal": true
+}
