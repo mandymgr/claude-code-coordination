@@ -1,0 +1,21 @@
+{
+  "interactions": [
+    {
+      "timestamp": "2025-08-23T00:41:53.980Z",
+      "query_type": "general_assistance",
+      "context": {
+        "project_type": "npm-package"
+      },
+      "user_satisfaction": 0.8999999999999999,
+      "patterns_used": {
+        "query_type": "general_assistance",
+        "response_type": "general_assistance",
+        "code_language": "javascript",
+        "complexity_level": "low"
+      }
+    }
+  ],
+  "learned_patterns": {},
+  "skill_progression": [],
+  "preferences": {}
+}
