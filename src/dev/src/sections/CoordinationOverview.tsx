@@ -5,9 +5,7 @@ import {
   HiUsers,
   HiGlobeAlt,
   HiShieldCheck,
-  HiRocketLaunch,
   HiArrowRight,
-  HiCheckCircle,
   HiSparkles
 } from 'react-icons/hi2';
 

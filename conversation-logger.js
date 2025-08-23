@@ -80,10 +80,21 @@ ${claudeResponse}
       summary[today] = {
         date: today,
         interactions: [],
-        keyTopics: new Set(),
-        filesCreated: new Set(),
-        commandsUsed: new Set()
+        keyTopics: [],
+        filesCreated: [],
+        commandsUsed: []
       };
+    }
+
+    // Ensure arrays (in case they were loaded as Sets from JSON)
+    if (!Array.isArray(summary[today].keyTopics)) {
+      summary[today].keyTopics = Array.from(summary[today].keyTopics || []);
+    }
+    if (!Array.isArray(summary[today].filesCreated)) {
+      summary[today].filesCreated = Array.from(summary[today].filesCreated || []);
+    }
+    if (!Array.isArray(summary[today].commandsUsed)) {
+      summary[today].commandsUsed = Array.from(summary[today].commandsUsed || []);
     }
 
     // Add interaction
@@ -95,25 +106,24 @@ ${claudeResponse}
     });
 
     // Extract key topics
-    this.extractKeyTopics(userMessage).forEach(topic => 
-      summary[today].keyTopics.add(topic)
-    );
+    this.extractKeyTopics(userMessage).forEach(topic => {
+      if (!summary[today].keyTopics.includes(topic)) {
+        summary[today].keyTopics.push(topic);
+      }
+    });
 
     // Track files and commands
     if (context.filesModified) {
-      context.filesModified.forEach(file => 
-        summary[today].filesCreated.add(file)
-      );
+      context.filesModified.forEach(file => {
+        if (!summary[today].filesCreated.includes(file)) {
+          summary[today].filesCreated.push(file);
+        }
+      });
     }
     
-    if (context.command) {
-      summary[today].commandsUsed.add(context.command);
+    if (context.command && !summary[today].commandsUsed.includes(context.command)) {
+      summary[today].commandsUsed.push(context.command);
     }
-
-    // Convert Sets back to arrays for JSON serialization
-    summary[today].keyTopics = Array.from(summary[today].keyTopics);
-    summary[today].filesCreated = Array.from(summary[today].filesCreated);
-    summary[today].commandsUsed = Array.from(summary[today].commandsUsed);
 
     fs.writeFileSync(this.summaryFile, JSON.stringify(summary, null, 2));
   }

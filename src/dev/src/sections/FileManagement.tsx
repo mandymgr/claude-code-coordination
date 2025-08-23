@@ -4,7 +4,6 @@ import {
   HiLockClosed,
   HiLockOpen,
   HiExclamationTriangle,
-  HiCheckCircle,
   HiClock,
   HiUsers,
   HiArrowPath,
@@ -83,14 +82,6 @@ const FileManagement: React.FC<FileManagementProps> = ({ isDarkTheme }) => {
     }
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'text-green-400';
-      case 'pending': return 'text-yellow-400';
-      case 'conflict': return 'text-red-400';
-      default: return isDarkTheme ? 'text-slate-400' : 'text-slate-600';
-    }
-  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {

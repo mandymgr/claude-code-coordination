@@ -14,13 +14,19 @@ const MagicDevEnvironment = require('./magic-dev-environment');
 const AdaptiveAIAssistant = require('./adaptive-ai-assistant');
 const MagicDeploymentEngine = require('./magic-deployment-engine');
 const ConversationLogger = require('../conversation-logger');
+const SmartResponseCache = require('./smart-response-cache');
+const RealtimeStatusUpdates = require('./realtime-status-updates');
+const BackupRestoreSystem = require('./backup-restore-system');
 
 class MagicCLI {
   constructor() {
-    this.version = '1.0.0';
+    this.version = '2.0.0';
     this.projectPath = process.cwd();
     this.commands = this.setupCommands();
     this.logger = new ConversationLogger(this.projectPath);
+    this.cache = new SmartResponseCache(this.projectPath);
+    this.statusUpdates = new RealtimeStatusUpdates(this.projectPath);
+    this.backupSystem = new BackupRestoreSystem(this.projectPath);
   }
 
   /**
@@ -89,6 +95,25 @@ class MagicCLI {
         description: '👥 Get optimal team composition for your project',
         usage: 'magic team [--size] [--skills] [--roles]',
         action: this.analyzeTeam.bind(this)
+      },
+      
+      // New enhanced features
+      'cache': {
+        description: '🚀 Manage AI response cache for faster performance',
+        usage: 'magic cache [stats|clear|warm|cleanup]',
+        action: this.manageCache.bind(this)
+      },
+      
+      'status': {
+        description: '🔄 Real-time project coordination status',
+        usage: 'magic status [--live] [--websocket-port=8080]',
+        action: this.showStatus.bind(this)
+      },
+      
+      'backup': {
+        description: '💾 Backup and restore coordination state',
+        usage: 'magic backup [create|restore|list] [name]',
+        action: this.manageBackup.bind(this)
       },
       
       'sync': {
@@ -779,6 +804,157 @@ class MagicCLI {
   }
 
   /**
+   * 💾 Manage backups
+   */
+  async manageBackup(args) {
+    const subcommand = args[0] || 'list';
+
+    switch (subcommand) {
+      case 'create': {
+        const backupName = args[1];
+        const description = args.slice(2).join(' ') || 'Manual backup';
+
+        console.log('💾 Creating backup...');
+        const name = await this.backupSystem.createBackup({
+          name: backupName,
+          description: description
+        });
+        console.log(`✅ Backup created: ${name}`);
+        break;
+      }
+
+      case 'restore': {
+        const restoreName = args[1];
+        if (!restoreName) {
+          console.log('❓ Please specify backup name to restore');
+          console.log('💡 Use: magic backup list - to see available backups');
+          return;
+        }
+
+        console.log(`🔄 Restoring backup: ${restoreName}`);
+        await this.backupSystem.restoreBackup(restoreName);
+        console.log('✅ Backup restored successfully');
+        break;
+      }
+
+      case 'list': {
+        const backups = this.backupSystem.listBackups();
+        console.log('📋 Available Backups:');
+        console.log('===================');
+
+        if (backups.length === 0) {
+          console.log('   No backups found');
+          console.log('   💡 Create one with: magic backup create');
+        } else {
+          backups.forEach(backup => {
+            console.log(`📦 ${backup.name}`);
+            console.log(`   📅 Date: ${backup.date}`);
+            console.log(`   📝 Type: ${backup.type}`);
+            console.log(`   📄 Description: ${backup.description}`);
+            console.log(`   💾 Size: ${backup.size || 'Unknown'}`);
+            console.log('');
+          });
+        }
+        break;
+      }
+
+      case 'stats': {
+        const stats = this.backupSystem.getStats();
+        console.log('📊 Backup Statistics:');
+        console.log(`   📦 Total Backups: ${stats.totalBackups}`);
+        console.log(`   💾 Total Size: ${stats.totalSize}KB`);
+        console.log(`   🔐 Encrypted: ${stats.encryptedBackups}`);
+        console.log(`   🗜️ Compressed: ${stats.compressedBackups}`);
+        console.log(`   📅 Oldest: ${stats.oldestBackup || 'None'}`);
+        console.log(`   🆕 Newest: ${stats.newestBackup || 'None'}`);
+        break;
+      }
+
+      default:
+        console.log('❓ Unknown backup command. Available: create, restore, list, stats');
+    }
+  }
+
+  /**
+   * 🔄 Show real-time project status
+   */
+  async showStatus(args) {
+    const isLive = args.includes('--live');
+    const port = this.getArgValue(args, '--websocket-port', '8080');
+
+    console.log('🔄 Project Coordination Status:');
+    console.log('================================');
+
+    try {
+      const status = await this.statusUpdates.getStatus();
+      
+      console.log(`📁 Project: ${status.project?.name || 'Unknown'}`);
+      console.log(`🏥 Health: ${status.project?.health || 'Unknown'}`);
+      console.log(`👥 Active Sessions: ${Object.keys(status.sessions || {}).length}`);
+      console.log(`🔒 File Locks: ${Object.keys(status.coordination?.activeLocks || {}).length}`);
+      console.log(`💬 Recent Messages: ${status.coordination?.messages?.length || 0}`);
+      console.log(`🧠 AI Cache Hit Rate: ${status.ai?.cacheStats?.hits || 0}%`);
+      console.log(`📁 Files Watched: ${status.development?.filesWatched || 0}`);
+      console.log(`🔄 Last Update: ${new Date(status.realtime?.lastUpdate || Date.now()).toLocaleString()}`);
+
+      if (isLive) {
+        console.log('');
+        console.log('🔴 Live status updates starting...');
+        console.log('Press Ctrl+C to stop');
+        await this.statusUpdates.startLiveUpdates(port);
+      }
+    } catch (error) {
+      console.log('❌ Failed to get status:', error.message);
+      console.log('💡 Try running: magic init');
+    }
+  }
+
+  /**
+   * 🚀 Manage AI response cache
+   */
+  async manageCache(args) {
+    const subcommand = args[0] || 'stats';
+
+    switch (subcommand) {
+      case 'stats': {
+        const stats = this.cache.getStats();
+        console.log('🚀 Cache Statistics:');
+        console.log('==================');
+        console.log(`📊 Total Entries: ${stats.totalEntries || 0}`);
+        console.log(`💾 Cache Size: ${stats.sizeKB || 0}KB`);
+        console.log(`🎯 Hit Rate: ${stats.hitRate || 0}%`);
+        console.log(`⚡ Avg Response Time: ${stats.avgResponseTime || 0}ms`);
+        console.log(`🗓️ Last Updated: ${stats.lastUpdated || 'Never'}`);
+        break;
+      }
+
+      case 'clear': {
+        console.log('🧹 Clearing cache...');
+        this.cache.clear();
+        console.log('✅ Cache cleared successfully');
+        break;
+      }
+
+      case 'warm': {
+        console.log('🔥 Warming cache...');
+        await this.cache.warmup();
+        console.log('✅ Cache warmed successfully');
+        break;
+      }
+
+      case 'cleanup': {
+        console.log('🧹 Cleaning up old cache entries...');
+        const removed = this.cache.cleanup();
+        console.log(`✅ Removed ${removed} old entries`);
+        break;
+      }
+
+      default:
+        console.log('❓ Unknown cache command. Available: stats, clear, warm, cleanup');
+    }
+  }
+
+  /**
    * 🛠️ Helper methods
    */
   generateMagicConfig(detection, environment, deployment) {
@@ -954,6 +1130,7 @@ UTILITIES:
   dashboard     📊 Open magic development dashboard
   learn         🎓 Get personalized learning recommendations
   stats         📈 View development statistics
+  backup        💾 Backup and restore coordination state
   
 EXAMPLES:
   magic init                              # Initialize magic for current project
@@ -962,6 +1139,8 @@ EXAMPLES:
   magic start --hot-reload              # Start with hot reload
   magic generate component UserCard     # Generate React component
   magic doctor --fix                    # Diagnose and fix issues
+  magic backup create my-backup         # Create a backup with name
+  magic backup list                     # List all available backups
 
 For more help on a specific command, run:
   magic <command> --help

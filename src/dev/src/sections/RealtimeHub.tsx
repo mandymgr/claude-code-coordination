@@ -19,7 +19,7 @@ interface RealtimeHubProps {
 }
 
 const RealtimeHub: React.FC<RealtimeHubProps> = ({ isDarkTheme }) => {
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connected');
+  const [connectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connected');
   const [activeConnections, setActiveConnections] = useState(4);
   const [isLiveDemo, setIsLiveDemo] = useState(false);
 

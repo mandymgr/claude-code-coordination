@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   HiUsers,
-  HiUserGroup,
   HiAcademicCap,
   HiChartBarSquare,
   HiLightBulb,

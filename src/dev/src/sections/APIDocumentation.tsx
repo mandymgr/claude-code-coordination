@@ -4,10 +4,7 @@ import {
   HiCodeBracket,
   HiCpuChip,
   HiUsers,
-  HiLockClosed,
-  HiChatBubbleLeftRight,
-  HiPlay,
-  HiDocumentText
+  HiPlay
 } from 'react-icons/hi2';
 
 interface APIDocumentationProps {

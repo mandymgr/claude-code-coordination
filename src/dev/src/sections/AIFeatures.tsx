@@ -7,8 +7,7 @@ import {
   HiChartBarSquare,
   HiCodeBracket,
   HiPlay,
-  HiSparkles,
-  HiArrowRight
+  HiSparkles
 } from 'react-icons/hi2';
 
 interface AIFeaturesProps {

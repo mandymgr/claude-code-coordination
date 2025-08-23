@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const SmartResponseCache = require('./smart-response-cache');
 
 class AdaptiveAIAssistant {
   constructor(projectPath = process.cwd()) {
@@ -15,6 +16,7 @@ class AdaptiveAIAssistant {
     this.patterns = this.loadLearningData();
     this.contextWindow = [];
     this.skillLevel = 'intermediate'; // beginner, intermediate, expert
+    this.cache = new SmartResponseCache(projectPath);
   }
 
   /**
@@ -22,6 +24,13 @@ class AdaptiveAIAssistant {
    */
   async assist(query, context = {}) {
     console.log('🧠 AI Assistant analyzing your request...');
+    
+    // Try to get cached response first
+    const cachedResponse = await this.cache.get(query, context);
+    if (cachedResponse) {
+      console.log('⚡ Using cached response for faster performance');
+      return cachedResponse;
+    }
     
     // Update context window
     this.updateContextWindow(query, context);
@@ -55,6 +64,11 @@ class AdaptiveAIAssistant {
         break;
       default:
         response = await this.provideGeneralAssistance(query, context);
+    }
+    
+    // Cache the response for future use
+    if (response) {
+      await this.cache.set(query, context, response);
     }
     
     // Learn from interaction
@@ -902,6 +916,134 @@ async def main():
   /**
    * 🎯 Main CLI interface
    */
+  /**
+   * 🎯 Calculate confidence score for responses
+   */
+  calculateConfidence(analysis) {
+    let confidence = 0.5; // Base confidence
+    
+    if (analysis && typeof analysis === 'object') {
+      // Increase confidence based on context richness
+      if (analysis.frameworks && analysis.frameworks.length > 0) confidence += 0.2;
+      if (analysis.complexity && analysis.complexity !== 'unknown') confidence += 0.1;
+      if (analysis.patterns && analysis.patterns.length > 0) confidence += 0.1;
+      if (this.patterns && Object.keys(this.patterns).length > 5) confidence += 0.1;
+    }
+    
+    return Math.min(confidence, 0.95); // Cap at 95%
+  }
+
+  /**
+   * 📝 Generate explanations for suggestions
+   */
+  generateExplanations(suggestions, analysis) {
+    if (!suggestions || !Array.isArray(suggestions)) return [];
+    
+    return suggestions.map((suggestion, index) => ({
+      suggestion_index: index,
+      explanation: suggestion.explanation || 'AI-generated code suggestion with best practices',
+      reasoning: 'Based on analysis of your project context and coding patterns',
+      benefits: ['Improved code maintainability', 'Better performance', 'Enhanced readability']
+    }));
+  }
+
+  /**
+   * ✨ Generate best practices
+   */
+  generateBestPractices(analysis) {
+    const practices = [
+      'Always include proper error handling and logging',
+      'Use TypeScript for better type safety',
+      'Implement comprehensive testing strategies',
+      'Follow SOLID principles for maintainable code',
+      'Use meaningful variable and function names'
+    ];
+    
+    if (analysis && analysis.frameworks) {
+      if (analysis.frameworks.includes('React')) {
+        practices.push('Use React.memo and useMemo for performance optimization');
+        practices.push('Implement proper component composition patterns');
+      }
+      if (analysis.frameworks.includes('Node.js')) {
+        practices.push('Use async/await for better asynchronous code handling');
+        practices.push('Implement proper middleware patterns');
+      }
+    }
+    
+    return practices;
+  }
+
+  /**
+   * 🔧 Generate debugging steps
+   */
+  generateDebuggingSteps(errorAnalysis) {
+    return [
+      '1. Reproduce the error consistently',
+      '2. Check console logs and error messages',
+      '3. Review recent code changes',
+      '4. Verify dependencies and versions',
+      '5. Test in isolation with minimal setup',
+      '6. Use debugger tools and breakpoints',
+      '7. Check documentation and community resources'
+    ];
+  }
+
+  /**
+   * 🛡️ Generate prevention tips
+   */
+  generatePreventionTips(errorAnalysis) {
+    return [
+      'Implement comprehensive error boundaries',
+      'Add proper input validation and sanitization',
+      'Use TypeScript for compile-time error detection',
+      'Set up automated testing pipelines',
+      'Implement proper logging and monitoring',
+      'Follow code review best practices'
+    ];
+  }
+
+  /**
+   * 📚 Generate learning resources
+   */
+  generateLearningResources(errorAnalysis) {
+    return [
+      'Official framework documentation',
+      'MDN Web Docs for JavaScript concepts',
+      'TypeScript handbook for type safety',
+      'Testing Library documentation',
+      'Stack Overflow community discussions',
+      'GitHub repositories with similar implementations'
+    ];
+  }
+
+  /**
+   * 🔄 Generate refactoring suggestions
+   */
+  generateRefactoringSuggestions(projectAnalysis) {
+    return [
+      'Extract common functionality into reusable utilities',
+      'Reduce component complexity by splitting large components',
+      'Implement proper separation of concerns',
+      'Optimize re-renders with React.memo and useMemo',
+      'Add proper TypeScript types and interfaces',
+      'Implement consistent error handling patterns'
+    ];
+  }
+
+  /**
+   * 📊 Generate monitoring suggestions
+   */
+  generateMonitoringSuggestions(performanceAnalysis) {
+    return [
+      'Implement application performance monitoring (APM)',
+      'Add error tracking and reporting systems',
+      'Monitor bundle size and loading performance',
+      'Track user interaction metrics',
+      'Set up automated performance regression testing',
+      'Implement health check endpoints'
+    ];
+  }
+
   static async provideAssistance(query, context = {}) {
     const assistant = new AdaptiveAIAssistant();
     return await assistant.assist(query, context);

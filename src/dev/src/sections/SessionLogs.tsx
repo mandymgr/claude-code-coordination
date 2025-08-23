@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   HiOutlineDocumentText,
   HiOutlineChartBarSquare,
   HiOutlineDocumentArrowDown,
   HiOutlineTrash,
   HiOutlineCalendarDays,
-  HiOutlineClockIcon,
   HiOutlineChatBubbleLeftEllipsis,
   HiOutlineCommandLine,
   HiOutlineDocumentDuplicate,
@@ -63,6 +62,8 @@ const SessionLogs: React.FC<SessionLogsProps> = ({ isDarkTheme }) => {
     setLoading(true);
     try {
       // Simulate API call to conversation logger
+      // In real implementation, would filter by `days` parameter
+      console.log(`Loading summary for last ${days} days`);
       setTimeout(() => {
         setLogs({
           '2025-08-23': {
