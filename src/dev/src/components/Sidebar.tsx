@@ -68,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 Claude Code Coordination
               </h1>
               <p className="text-sm" style={{color: 'var(--text-muted)'}}>
-                Development System
+                Utviklingssystem
               </p>
             </div>
           </div>
@@ -86,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <HiMagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4" style={{color: 'var(--text-muted)'}} />
             <input
               type="text"
-              placeholder="Search sections..."
+              placeholder="Søk i seksjoner..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 rounded-lg border text-sm transition-colors"
@@ -143,19 +143,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* System Status */}
         <div className="p-6 border-t" style={{borderColor: 'var(--bg-tertiary)'}}>
-          <div className="nordic-caption mb-3">System Status</div>
+          <div className="nordic-caption mb-3">Systemstatus</div>
           <div className="space-y-2">
             <div className="flex justify-between items-center text-sm">
-              <span>AI Engine</span>
-              <span className="text-xs font-medium" style={{color: 'var(--accent-primary)'}}>Active</span>
+              <span>AI-Motor</span>
+              <span className="text-xs font-medium" style={{color: 'var(--accent-primary)'}}>Aktiv</span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span>WebSocket</span>
-              <span className="text-xs font-medium" style={{color: 'var(--accent-primary)'}}>Connected</span>
+              <span className="text-xs font-medium" style={{color: 'var(--accent-primary)'}}>Tilkoblet</span>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span>Sessions</span>
-              <span className="text-xs font-medium" style={{color: 'var(--text-muted)'}}>3 Active</span>
+              <span>Sesjoner</span>
+              <span className="text-xs font-medium" style={{color: 'var(--text-muted)'}}>3 Aktive</span>
             </div>
           </div>
         </div>
@@ -171,7 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }}
           >
             <span className="text-sm font-medium">
-              {isDarkTheme ? 'Light Theme' : 'Dark Theme'}
+              {isDarkTheme ? 'Lyst Tema' : 'Mørkt Tema'}
             </span>
             {isDarkTheme ? (
               <HiSun className="w-4 h-4" />
