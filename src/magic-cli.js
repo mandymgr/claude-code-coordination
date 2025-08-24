@@ -17,6 +17,7 @@ const ConversationLogger = require('../conversation-logger');
 const SmartResponseCache = require('./smart-response-cache');
 const RealtimeStatusUpdates = require('./realtime-status-updates');
 const BackupRestoreSystem = require('./backup-restore-system');
+const TerminalCoordinator = require('./terminal-coordinator');
 
 class MagicCLI {
   constructor() {
@@ -27,6 +28,7 @@ class MagicCLI {
     this.cache = new SmartResponseCache(this.projectPath);
     this.statusUpdates = new RealtimeStatusUpdates(this.projectPath);
     this.backupSystem = new BackupRestoreSystem(this.projectPath);
+    this.coordinator = new TerminalCoordinator(this.projectPath);
   }
 
   /**
@@ -178,6 +180,37 @@ class MagicCLI {
         description: '📝 View and manage conversation/session logs',
         usage: 'magic logs [summary|report|export|clean] [options]',
         action: this.manageLogs.bind(this)
+      },
+
+      // Terminal coordination commands
+      'coordinate': {
+        description: '🔄 Start terminal coordination session',
+        usage: 'magic coordinate [description]',
+        action: this.startCoordination.bind(this)
+      },
+
+      'lock': {
+        description: '🔒 Lock file for editing in coordinated session',
+        usage: 'magic lock <file> [reason]',
+        action: this.lockFile.bind(this)
+      },
+
+      'unlock': {
+        description: '🔓 Unlock file in coordinated session',
+        usage: 'magic unlock <file>',
+        action: this.unlockFile.bind(this)
+      },
+
+      'message': {
+        description: '💬 Send message to other coordinated terminals',
+        usage: 'magic message <message> [target]',
+        action: this.sendMessage.bind(this)
+      },
+
+      'coord-status': {
+        description: '🔄 Show terminal coordination status',
+        usage: 'magic coord-status',
+        action: this.getCoordinationStatus.bind(this)
       }
     };
   }
@@ -1054,6 +1087,94 @@ class MagicCLI {
         };
       }
     });
+  }
+
+  /**
+   * 🔄 Terminal coordination methods
+   */
+  async startCoordination(args) {
+    const description = args.join(' ') || 'Magic CLI coordination session';
+    const session = await this.coordinator.startSession(description);
+    console.log(`🔄 Coordination session active: ${session.id}`);
+    return session;
+  }
+
+  lockFile(args) {
+    if (args.length === 0) {
+      console.log('❌ Please specify a file to lock');
+      console.log('💡 Usage: magic lock <file> [reason]');
+      return;
+    }
+    
+    const filePath = args[0];
+    const reason = args.slice(1).join(' ') || 'Working on file';
+    return this.coordinator.lockFile(filePath, reason);
+  }
+
+  unlockFile(args) {
+    if (args.length === 0) {
+      console.log('❌ Please specify a file to unlock');
+      console.log('💡 Usage: magic unlock <file>');
+      return;
+    }
+    
+    const filePath = args[0];
+    return this.coordinator.unlockFile(filePath);
+  }
+
+  sendMessage(args) {
+    if (args.length === 0) {
+      console.log('❌ Please specify a message');
+      console.log('💡 Usage: magic message <message> [target]');
+      return;
+    }
+    
+    const message = args[0];
+    const target = args[1] || 'all';
+    const priority = args[2] || 'normal';
+    return this.coordinator.sendMessage(message, target, priority);
+  }
+
+  getCoordinationStatus() {
+    const status = this.coordinator.getStatus();
+    
+    console.log('\n🔄 Terminal Coordination Status:');
+    console.log('================================');
+    console.log(`🆔 Current Session: ${status.currentSession}`);
+    console.log(`👥 Active Sessions: ${status.activeSessions}`);
+    console.log(`🔒 Locked Files: ${status.activeFiles}`);
+    console.log(`💬 Pending Messages: ${status.pendingMessages}`);
+    
+    if (status.sessions.length > 0) {
+      console.log('\n👥 Sessions:');
+      status.sessions.forEach(session => {
+        const current = session.id === status.currentSession ? ' (you)' : '';
+        console.log(`   ${session.id}${current} - ${session.description}`);
+        if (session.currentTask) {
+          console.log(`     🎯 Task: ${session.currentTask}`);
+        }
+      });
+    }
+    
+    if (status.locks.length > 0) {
+      console.log('\n🔒 Locked files:');
+      status.locks.forEach(lock => {
+        const yours = lock.session === status.currentSession ? ' (yours)' : '';
+        console.log(`   ${lock.file}${yours} - ${lock.reason}`);
+        console.log(`     ⏰ Since: ${new Date(lock.since).toLocaleString()}`);
+      });
+    }
+    
+    if (status.recentMessages.length > 0) {
+      console.log('\n💬 Recent messages:');
+      status.recentMessages.forEach(msg => {
+        const priority = msg.priority === 'high' ? '🔴' : msg.priority === 'low' ? '🟡' : '🔵';
+        console.log(`   ${priority} From ${msg.from}: ${msg.message}`);
+        console.log(`     ⏰ ${new Date(msg.timestamp).toLocaleString()}`);
+      });
+    }
+    
+    return status;
   }
 
   ensureDirectoryExists(dirPath) {

@@ -3,12 +3,6 @@ import {
   HiOutlineCube,
   HiOutlineShieldCheck,
   HiOutlineArchiveBox,
-  HiBars3,
-  HiXMark,
-  HiSun,
-  HiMoon,
-  HiCog6Tooth,
-  HiMagnifyingGlass,
   HiUsers,
   HiCpuChip,
   HiRocketLaunch,
@@ -16,6 +10,9 @@ import {
   HiGlobeAlt,
   HiOutlineDocumentText
 } from 'react-icons/hi2';
+
+// Import components
+import { Sidebar } from './components';
 
 // Import coordination-specific sections
 import { 
@@ -32,7 +29,7 @@ import {
 
 const DeveloperSystem: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isDarkTheme, setIsDarkTheme] = useState(true); // Default to dark for dev tools
+  const [isDarkTheme, setIsDarkTheme] = useState(false); // Default to light for Nordic aesthetics
   const [activeSection, setActiveSection] = useState('coordination-overview');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -45,15 +42,19 @@ const DeveloperSystem: React.FC = () => {
       setIsDarkTheme(savedTheme === 'dark');
     }
     
+    // Apply theme to document
+    document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
+    
     return () => {
       document.body.classList.remove('coordination-developer-system');
     };
-  }, []);
+  }, [isDarkTheme]);
 
   const handleThemeToggle = () => {
     const newTheme = !isDarkTheme;
     setIsDarkTheme(newTheme);
     localStorage.setItem('coordination-theme', newTheme ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', newTheme ? 'dark' : 'light');
   };
 
   const sections = [
@@ -119,234 +120,160 @@ const DeveloperSystem: React.FC = () => {
   );
 
   return (
-    <>
-      <style>
-        {`
-          body.coordination-developer-system {
-            padding-top: 0 !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          }
-          
-          .coordination-gradient-bg {
-            background: ${isDarkTheme 
-              ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
-              : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%)'
-            };
-          }
-          
-          .coordination-card {
-            background: ${isDarkTheme 
-              ? 'rgba(30, 41, 59, 0.8)'
-              : 'rgba(255, 255, 255, 0.9)'
-            };
-            border: 1px solid ${isDarkTheme 
-              ? 'rgba(71, 85, 105, 0.5)'
-              : 'rgba(203, 213, 225, 0.8)'
-            };
-            backdrop-filter: blur(12px);
-            border-radius: 12px;
-            transition: all 0.3s ease;
-          }
-          
-          .coordination-card:hover {
-            transform: translateY(-2px);
-            box-shadow: ${isDarkTheme 
-              ? '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2)'
-              : '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-            };
-          }
-          
-          .coordination-sidebar {
-            background: ${isDarkTheme 
-              ? 'linear-gradient(180deg, #1e293b 0%, #334155 100%)'
-              : 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)'
-            };
-            border-right: 1px solid ${isDarkTheme 
-              ? 'rgba(71, 85, 105, 0.5)'
-              : 'rgba(203, 213, 225, 0.8)'
-            };
-          }
-          
-          .coordination-accent {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-          }
-          
-          .coordination-accent-secondary {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-          }
-        `}
-      </style>
-      
-      <div className="min-h-screen flex coordination-gradient-bg">
-        {/* Sidebar */}
-        <div className={`fixed inset-y-0 left-0 z-50 w-80 coordination-sidebar transform transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}>
-          <div className={`flex items-center justify-between p-6 border-b ${
-            isDarkTheme ? 'border-slate-600/50' : 'border-slate-300/50'
-          }`}>
-            <div>
-              <h1 className={`text-2xl font-bold ${
-                isDarkTheme ? 'text-white' : 'text-slate-900'
-              }`} style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
-                Claude Code Coordination
-              </h1>
-              <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'} mt-1`}>
-                Advanced Multi-Terminal AI System
-              </p>
-            </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className={`lg:hidden p-2 rounded-lg ${
-                isDarkTheme 
-                  ? 'hover:bg-slate-700/50 text-slate-300' 
-                  : 'hover:bg-slate-200/50 text-slate-700'
-              } transition-colors`}
-            >
-              <HiXMark className="w-6 h-6" />
-            </button>
-          </div>
-          
-          <nav className="p-6">
-            <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'} mb-6 leading-relaxed`}>
-              Comprehensive development system for Claude Code coordination features, AI intelligence, and multi-terminal collaboration.
-            </p>
-
-            {/* Search */}
-            <div className="mb-6">
-              <div className="relative">
-                <HiMagnifyingGlass className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${
-                  isDarkTheme ? 'text-slate-500' : 'text-slate-400'
-                }`} />
-                <input
-                  type="text"
-                  placeholder="Search features and docs..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full border rounded-lg pl-10 pr-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
-                    isDarkTheme 
-                      ? 'bg-slate-800/50 border-slate-600/50 text-white placeholder-slate-500' 
-                      : 'bg-white/50 border-slate-300 text-slate-900 placeholder-slate-400'
-                  }`}
-                />
-              </div>
-            </div>
-
-            {/* Navigation Links */}
-            <div className="space-y-2 mb-8">
-              {filteredSections.map((section) => (
-                <a
-                  key={section.id}
-                  href={`#${section.id}`}
-                  onClick={() => setActiveSection(section.id)}
-                  className={`flex items-start gap-3 px-4 py-3 rounded-lg transition-all group ${
-                    activeSection === section.id
-                      ? isDarkTheme 
-                        ? 'bg-blue-600/20 text-blue-400 border-r-2 border-blue-400'
-                        : 'bg-blue-50 text-blue-700 border-r-2 border-blue-500'
-                      : isDarkTheme
-                        ? 'text-slate-400 hover:text-white hover:bg-slate-700/30'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
-                  }`}
-                >
-                  <section.icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <div className="font-medium">{section.title}</div>
-                    <div className={`text-xs mt-1 ${
-                      activeSection === section.id
-                        ? isDarkTheme ? 'text-blue-300/80' : 'text-blue-600/80'
-                        : isDarkTheme ? 'text-slate-500' : 'text-slate-500'
-                    }`}>
-                      {section.description}
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
-
-            {/* Quick Stats */}
-            <div className="coordination-card p-4 mb-6">
-              <h3 className={`text-sm font-medium ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'} mb-3`}>
-                System Status
-              </h3>
-              <div className="space-y-2 text-xs">
-                <div className={`flex justify-between ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
-                  <span>AI Engine</span>
-                  <span className="text-green-400 font-medium">Active</span>
-                </div>
-                <div className={`flex justify-between ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
-                  <span>WebSocket Hub</span>
-                  <span className="text-green-400 font-medium">Connected</span>
-                </div>
-                <div className={`flex justify-between ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
-                  <span>Team Optimizer</span>
-                  <span className="text-blue-400 font-medium">Ready</span>
-                </div>
-                <div className={`flex justify-between ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
-                  <span>File Locks</span>
-                  <span className="text-orange-400 font-medium">3 Active</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Settings */}
-            <div className={`border-t pt-6 ${isDarkTheme ? 'border-slate-600/50' : 'border-slate-300/50'}`}>
-              <h3 className={`text-sm font-medium ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'} mb-4 flex items-center gap-2`}>
-                <HiCog6Tooth className="w-4 h-4" />
-                Developer Settings
-              </h3>
-              
-              {/* Theme Toggle */}
-              <div className="flex items-center justify-between py-2">
-                <span className={`text-sm ${isDarkTheme ? 'text-slate-300' : 'text-slate-700'}`}>Theme</span>
-                <button
-                  onClick={handleThemeToggle}
-                  className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
-                    isDarkTheme 
-                      ? 'hover:bg-slate-700/50 text-slate-300' 
-                      : 'hover:bg-slate-200/50 text-slate-700'
-                  }`}
-                  title={isDarkTheme ? 'Switch to Light' : 'Switch to Dark'}
-                >
-                  {isDarkTheme ? (
-                    <HiSun className="w-4 h-4 text-orange-400" />
-                  ) : (
-                    <HiMoon className="w-4 h-4 text-blue-500" />
-                  )}
-                </button>
-              </div>
-            </div>
-          </nav>
-        </div>
+    <div className="min-h-screen" style={{backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)'}}>
+      <div className="flex">
+        <Sidebar
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          filteredSections={filteredSections}
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          isDarkTheme={isDarkTheme}
+          onThemeToggle={handleThemeToggle}
+        />
 
         {/* Main Content */}
-        <div className={`flex-1 transition-all duration-300 ${
-          sidebarOpen ? 'lg:ml-80' : 'ml-0'
-        }`}>
-          {/* Mobile Header */}
-          <div className={`lg:hidden sticky top-0 z-40 backdrop-blur p-4 border-b ${
-            isDarkTheme 
-              ? 'bg-slate-900/90 border-slate-600/50 text-white' 
-              : 'bg-white/90 border-slate-300/50 text-slate-900'
-          }`}>
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkTheme 
-                    ? 'hover:bg-slate-700/50' 
-                    : 'hover:bg-slate-200/50'
-                }`}
-              >
-                <HiBars3 className="w-6 h-6" />
-              </button>
-              <h1 className="text-lg font-medium">Coordination System</h1>
-              <div className="w-10" />
+        <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'lg:ml-0' : 'ml-0'}`}>
+          {/* Hero Section - Magazine Style */}
+          <section className="nordic-section">
+            <div className="nordic-container-wide">
+              <div className="nordic-grid-magazine">
+                <div>
+                  <div className="nordic-h3" style={{color: 'var(--text-muted)', marginBottom: 'var(--space-sm)'}}>
+                    Development System
+                  </div>
+                  <h1 className="nordic-h1" style={{marginBottom: 'var(--space-md)'}}>
+                    Claude Code Coordination
+                  </h1>
+                  <p className="nordic-body-large">
+                    Advanced multi-terminal AI system for intelligent file coordination, 
+                    real-time collaboration, and AI-powered development optimization.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-6">
+                  <div className="nordic-card" style={{padding: 'var(--space-lg)'}}>
+                    <div className="nordic-caption mb-2">System Status</div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="nordic-body text-sm">AI Engine</span>
+                        <span className="text-xs font-medium" style={{color: 'var(--accent-secondary)'}}>Active</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="nordic-body text-sm">WebSocket Hub</span>
+                        <span className="text-xs font-medium" style={{color: 'var(--accent-secondary)'}}>Connected</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="nordic-body text-sm">File Locks</span>
+                        <span className="text-xs font-medium" style={{color: 'var(--accent-primary)'}}>3 Active</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <button className="nordic-button-primary">
+                      Get Started
+                    </button>
+                    <button className="nordic-button">
+                      Documentation
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </section>
+
+          {/* Feature Introduction */}
+          <section className="nordic-section-tight" style={{backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--bg-tertiary)'}}>
+            <div className="nordic-container-narrow">
+              <div className="text-center">
+                <h2 className="nordic-h2">Intelligent Coordination</h2>
+                <p className="nordic-body">
+                  Built for modern development workflows requiring seamless collaboration 
+                  between multiple Claude Code instances with zero conflicts.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Features - Asymmetric Layout */}
+          <section className="nordic-section">
+            <div className="nordic-container-wide">
+              <div className="space-y-16">
+                {/* First feature row */}
+                <div className="nordic-grid-feature">
+                  <div>
+                    <div className="flex items-center gap-4 mb-6">
+                      <HiCpuChip className="w-10 h-10" style={{color: 'var(--accent-primary)'}} />
+                      <div>
+                        <h3 className="nordic-h4">AI Features</h3>
+                        <p className="nordic-caption">Advanced Intelligence</p>
+                      </div>
+                    </div>
+                    <p className="nordic-body">
+                      AI-powered task suggestions, intelligent conflict resolution, 
+                      and automated optimization for development workflows.
+                    </p>
+                  </div>
+                  <div className="nordic-card">
+                    <div className="nordic-caption mb-4">Capabilities</div>
+                    <div className="space-y-3 text-sm">
+                      <div>• Smart file coordination</div>
+                      <div>• Conflict prevention</div>
+                      <div>• Task automation</div>
+                      <div>• Performance optimization</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Second feature row - reversed */}
+                <div className="nordic-grid-feature" style={{gridTemplateColumns: '3fr 5fr'}}>
+                  <div className="nordic-card">
+                    <div className="nordic-caption mb-4">Real-time Status</div>
+                    <div className="space-y-3 text-sm">
+                      <div>• Live collaboration</div>
+                      <div>• WebSocket coordination</div>
+                      <div>• Session management</div>
+                      <div>• Multi-terminal sync</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-4 mb-6">
+                      <HiGlobeAlt className="w-10 h-10" style={{color: 'var(--accent-primary)'}} />
+                      <div>
+                        <h3 className="nordic-h4">Realtime Hub</h3>
+                        <p className="nordic-caption">Live Collaboration</p>
+                      </div>
+                    </div>
+                    <p className="nordic-body">
+                      WebSocket-based real-time coordination enabling seamless collaboration 
+                      across multiple terminal instances with instant synchronization.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Additional Features Grid */}
+                <div className="nordic-grid nordic-grid-3" style={{marginTop: 'var(--space-3xl)'}}>
+                  {sections.slice(2, 8).map((section) => (
+                    <button 
+                      key={section.id} 
+                      className="nordic-card cursor-pointer group text-left w-full border-0"
+                      onClick={() => setActiveSection(section.id)}
+                      aria-label={`View ${section.title} section`}
+                      style={{backgroundColor: 'var(--bg-primary)'}}
+                    >
+                      <section.icon className="w-6 h-6 mb-4 group-hover:scale-110 transition-transform duration-300" style={{color: 'var(--accent-primary)'}} />
+                      <h4 className="nordic-h3" style={{fontSize: 'var(--text-base)', marginBottom: 'var(--space-sm)'}}>{section.title}</h4>
+                      <p className="nordic-caption">{section.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
 
           {/* Content Sections */}
-          <main className="relative">
+          <div className="relative">
             <CoordinationOverview isDarkTheme={isDarkTheme} />
             <AIFeatures isDarkTheme={isDarkTheme} />
             <RealtimeHub isDarkTheme={isDarkTheme} />
@@ -356,10 +283,10 @@ const DeveloperSystem: React.FC = () => {
             <PerformanceMetrics isDarkTheme={isDarkTheme} />
             <APIDocumentation isDarkTheme={isDarkTheme} />
             <SessionLogs isDarkTheme={isDarkTheme} />
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
-    </>
+    </div>
   );
 };
 

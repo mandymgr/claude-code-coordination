@@ -1,15 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* Nordic Color Palette */
+  --color-nordic-white: #fefefe;
+  --color-nordic-cream: #f8f6f1;
+  --color-nordic-stone: #e8e3db;
+  --color-nordic-sage: #b8c5a6;
+  --color-nordic-forest: #5a6c57;
+  --color-nordic-charcoal: #2c2c2c;
+  --color-nordic-coal: #1a1a1a;
+  
+  /* Light theme (default) */
+  --bg-primary: var(--color-nordic-white);
+  --bg-secondary: var(--color-nordic-cream);
+  --bg-tertiary: var(--color-nordic-stone);
+  --text-primary: var(--color-nordic-coal);
+  --text-secondary: var(--color-nordic-charcoal);
+  --text-muted: #6b7280;
+  --accent-primary: var(--color-nordic-forest);
+  --accent-secondary: var(--color-nordic-sage);
+  
+  /* Typography */
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, 'Liberation Mono', Menlo, monospace;
+  
+  /* Nordic spacing system - based on golden ratio */
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1.25rem;
+  --space-lg: 2rem;
+  --space-xl: 3.25rem;
+  --space-2xl: 5.25rem;
+  --space-3xl: 8.5rem;
+  
+  /* Typography scale */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
 
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  font-weight: 400;
+  
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -18,12 +63,22 @@
   -webkit-text-size-adjust: 100%;
 }
 
+[data-theme="dark"] {
+  --bg-primary: var(--color-nordic-coal);
+  --bg-secondary: var(--color-nordic-charcoal);
+  --bg-tertiary: #374151;
+  --text-primary: var(--color-nordic-white);
+  --text-secondary: var(--color-nordic-cream);
+  --text-muted: #9ca3af;
+  --accent-primary: var(--color-nordic-sage);
+  --accent-secondary: var(--color-nordic-forest);
+}
+
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
@@ -31,6 +86,263 @@ body {
   margin: 0;
 }
 
-code, pre {
-  font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'Liberation Mono', Menlo, monospace;
+/* Nordic Typography Classes */
+.nordic-serif {
+  font-family: var(--font-serif);
+}
+
+.nordic-sans {
+  font-family: var(--font-sans);
+}
+
+.nordic-mono {
+  font-family: var(--font-mono);
+}
+
+/* Nordic Spacing Utilities */
+.nordic-section {
+  padding: var(--space-3xl) var(--space-lg);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.nordic-section-tight {
+  padding: var(--space-2xl) var(--space-lg);
+}
+
+.nordic-container {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.nordic-container-wide {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.nordic-container-narrow {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+/* Nordic Cards - Subtle Interactions */
+.nordic-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--bg-tertiary);
+  border-radius: 2px;
+  padding: var(--space-lg);
+  margin-bottom: var(--space-md);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.nordic-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+  transition: left 0.6s ease;
+}
+
+.nordic-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: var(--accent-primary);
+}
+
+.nordic-card:hover::before {
+  left: 100%;
+}
+
+/* Nordic Buttons */
+.nordic-button {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  padding: var(--space-sm) var(--space-lg);
+  border: 2px solid var(--accent-primary);
+  background: transparent;
+  color: var(--accent-primary);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.nordic-button:hover {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+.nordic-button-primary {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+.nordic-button-primary:hover {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+/* Nordic Headers */
+.nordic-h1 {
+  font-family: var(--font-serif);
+  font-size: var(--text-5xl);
+  font-weight: 400;
+  line-height: 1.1;
+  margin-bottom: var(--space-xl);
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.nordic-h2 {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  font-weight: 400;
+  line-height: 1.25;
+  margin-bottom: var(--space-lg);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.nordic-h3 {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-md);
+  color: var(--text-primary);
+}
+
+.nordic-h4 {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: 500;
+  line-height: 1.3;
+  margin-bottom: var(--space-md);
+  color: var(--text-primary);
+}
+
+.nordic-body {
+  font-size: var(--text-base);
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+.nordic-body-large {
+  font-size: var(--text-lg);
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+}
+
+.nordic-caption {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Nordic Grid System - Asymmetric Balance */
+.nordic-grid {
+  display: grid;
+  gap: var(--space-xl);
+}
+
+.nordic-grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+}
+
+.nordic-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.nordic-grid-asymmetric {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: var(--space-2xl);
+  align-items: start;
+}
+
+.nordic-grid-magazine {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-2xl);
+}
+
+.nordic-grid-feature {
+  display: grid;
+  grid-template-columns: 5fr 3fr;
+  gap: var(--space-2xl);
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .nordic-grid-asymmetric,
+  .nordic-grid-magazine,
+  .nordic-grid-feature {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+}
+
+/* Nordic Navigation */
+.nordic-nav {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--bg-tertiary);
+  padding: var(--space-md) 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+}
+
+.nordic-nav-item {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: var(--space-sm) var(--space-md);
+  transition: color 0.3s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.nordic-nav-item:hover,
+.nordic-nav-item.active {
+  color: var(--accent-primary);
+  border-bottom-color: var(--accent-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  :root {
+    --space-2xl: 3rem;
+    --text-5xl: 2.25rem;
+    --text-3xl: 1.5rem;
+  }
+  
+  .nordic-section {
+    padding: var(--space-xl) var(--space-sm);
+  }
+  
+  .nordic-container {
+    padding: 0 var(--space-sm);
+  }
+  
+  .nordic-card {
+    padding: var(--space-md);
+  }
 }

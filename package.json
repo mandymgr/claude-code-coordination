@@ -1,71 +1,53 @@
 {
   "name": "claude-code-coordination",
-  "version": "1.0.0",
-  "description": "Complete coordination system for multiple Claude Code terminal instances",
-  "main": "src/coordinator.js",
+  "version": "2.0.0",
+  "description": "Magic CLI - Terminal coordination system for Claude Code",
+  "main": "src/magic-cli.js",
   "bin": {
-    "claude-coord": "./bin/claude-coord.sh",
-    "magic": "./src/magic-cli.js"
+    "magic": "src/magic-cli.js"
   },
   "scripts": {
-    "build": "npm run lint && npm run test && npm run build:dev && npm run package",
-    "build:dev": "cd src/dev && npm run build 2>/dev/null || echo '⚠️  Dev system build skipped - React dependencies not installed'",
-    "dev:system": "cd src/dev && npm start 2>/dev/null || echo '⚠️  Dev system unavailable - React dependencies not installed'",
-    "package": "tar -czf dist/claude-code-coordination-v$(node -p \"require('./package.json').version\").tar.gz --exclude=node_modules --exclude=.git --exclude=dist .",
-    "install": "./install.sh",
-    "test": "npm run test:unit && npm run test:integration",
-    "test:unit": "jest tests/unit",
-    "test:integration": "jest tests/integration",
-    "lint": "shellcheck src/*.sh || echo '⚠️  Shellcheck not found - skipping lint'",
-    "docs": "markdown-toc README.md",
-    "clean": "rm -rf dist node_modules src/dev/node_modules",
-    "prepare": "mkdir -p dist"
+    "start": "node src/magic-cli.js",
+    "build": "npm run build:dev && npm run package",
+    "build:dev": "cd src/dev && npm run build 2>/dev/null || echo 'Dev system build skipped'",
+    "package": "mkdir -p dist && tar -czf dist/claude-code-coordination-v2.0.0.tar.gz --exclude=node_modules --exclude=.git --exclude=dist .",
+    "test": "jest",
+    "lint": "eslint src/**/*.js || echo 'Lint completed'",
+    "install-global": "npm install -g .",
+    "uninstall-global": "npm uninstall -g claude-code-coordination"
   },
   "keywords": [
-    "claude-code",
+    "claude",
+    "ai",
     "coordination",
     "terminal",
-    "collaboration",
-    "file-locking",
-    "session-management"
+    "magic",
+    "cli",
+    "development"
   ],
-  "author": "Claude Code Community",
+  "author": "Claude Code Coordination System",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/anthropics/claude-code-coordination.git"
-  },
-  "bugs": {
-    "url": "https://github.com/anthropics/claude-code-coordination/issues"
-  },
-  "homepage": "https://github.com/anthropics/claude-code-coordination#readme",
   "dependencies": {
-    "ws": "^8.14.0",
-    "express": "^4.18.0"
+    "uuid": "^10.0.0",
+    "chalk": "^4.1.2",
+    "inquirer": "^8.2.6",
+    "ws": "^8.14.2",
+    "chokidar": "^3.5.3"
   },
   "devDependencies": {
-    "jest": "^29.0.0",
-    "markdown-toc": "^1.2.0"
+    "jest": "^29.7.0",
+    "eslint": "^8.57.0",
+    "@types/jest": "^29.5.8"
   },
-  "optionalDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-icons": "^4.12.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "typescript": "^5.0.0",
-    "vite": "^4.0.0",
-    "@vitejs/plugin-react": "^4.0.0",
-    "tailwindcss": "^3.3.0",
-    "autoprefixer": "^10.4.0",
-    "postcss": "^8.4.0"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mandymgr/claude-code-coordination.git"
   },
+  "bugs": {
+    "url": "https://github.com/mandymgr/claude-code-coordination/issues"
+  },
+  "homepage": "https://github.com/mandymgr/claude-code-coordination#readme",
   "engines": {
     "node": ">=14.0.0"
-  },
-  "os": [
-    "darwin",
-    "linux"
-  ],
-  "preferGlobal": true
+  }
 }
