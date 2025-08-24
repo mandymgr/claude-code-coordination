@@ -25,7 +25,8 @@ import {
   SessionCoordination,
   PerformanceMetrics,
   APIDocumentation,
-  SessionLogs
+  SessionLogs,
+  AutonomousBuilder
 } from './sections';
 
 const DeveloperSystem: React.FC = () => {
@@ -64,6 +65,12 @@ const DeveloperSystem: React.FC = () => {
       title: 'Hjem', 
       icon: HiHome,
       description: 'Systemoversikt og kom i gang'
+    },
+    { 
+      id: 'autonomous-builder', 
+      title: 'Autonom Byggeverktøy', 
+      icon: HiRocketLaunch,
+      description: 'Bygg komplette applikasjoner fra beskrivelser'
     },
     { 
       id: 'coordination-overview', 
@@ -184,6 +191,12 @@ const DeveloperSystem: React.FC = () => {
                       <div className="flex flex-col gap-3">
                         <button 
                           className="nordic-button-primary"
+                          onClick={() => setActiveSection('autonomous-builder')}
+                        >
+                          🚀 Start Autonom Bygging
+                        </button>
+                        <button 
+                          className="nordic-button"
                           onClick={() => setActiveSection('coordination-overview')}
                         >
                           Kom i Gang
@@ -238,6 +251,7 @@ const DeveloperSystem: React.FC = () => {
 
           {/* Content Sections - Show only active section */}
           <div className="relative">
+            {activeSection === 'autonomous-builder' && <AutonomousBuilder isDarkTheme={isDarkTheme} />}
             {activeSection === 'coordination-overview' && <CoordinationOverview isDarkTheme={isDarkTheme} />}
             {activeSection === 'ai-features' && <AIFeatures isDarkTheme={isDarkTheme} />}
             {activeSection === 'realtime-hub' && <RealtimeHub isDarkTheme={isDarkTheme} />}

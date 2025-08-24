@@ -19,6 +19,13 @@ const RealtimeStatusUpdates = require('./realtime-status-updates');
 const BackupRestoreSystem = require('./backup-restore-system');
 const TerminalCoordinator = require('./terminal-coordinator');
 
+// Import new autonomous AI team components
+const MultiAIOrchestrator = require('./multi-ai-orchestrator');
+const { AIAPIManager } = require('./ai-api-manager');
+const { CrossAIProtocol } = require('./cross-ai-protocol');
+const { AISpecializationEngine } = require('./ai-specialization-engine');
+const { TaskParser } = require('./task-parser');
+
 class MagicCLI {
   constructor() {
     this.version = '2.0.0';
@@ -29,6 +36,13 @@ class MagicCLI {
     this.statusUpdates = new RealtimeStatusUpdates(this.projectPath);
     this.backupSystem = new BackupRestoreSystem(this.projectPath);
     this.coordinator = new TerminalCoordinator(this.projectPath);
+    
+    // Initialize autonomous AI team components
+    this.orchestrator = new MultiAIOrchestrator();
+    this.aiApiManager = new AIAPIManager();
+    this.specializationEngine = new AISpecializationEngine();
+    this.taskParser = new TaskParser();
+    this.crossAIProtocol = null; // Initialize when needed
   }
 
   /**
@@ -180,6 +194,31 @@ class MagicCLI {
         description: '📝 View and manage conversation/session logs',
         usage: 'magic logs [summary|report|export|clean] [options]',
         action: this.manageLogs.bind(this)
+      },
+
+      // Autonomous AI Team Commands
+      'build': {
+        description: '🚀 Build complete project from description using AI team',
+        usage: 'magic build "project description"',
+        action: this.buildAutonomously.bind(this)
+      },
+
+      'parse': {
+        description: '🔍 Parse project description into structured tasks',
+        usage: 'magic parse "project description"',
+        action: this.parseProject.bind(this)
+      },
+
+      'ai-team': {
+        description: '🤖 Assemble and manage AI team for project',
+        usage: 'magic ai-team [assemble|status|analytics] [project-spec]',
+        action: this.manageAITeam.bind(this)
+      },
+
+      'ai-services': {
+        description: '🔧 Manage AI services and API connections',
+        usage: 'magic ai-services [list|register|test|health]',
+        action: this.manageAIServices.bind(this)
       },
 
       // Terminal coordination commands
@@ -1177,6 +1216,343 @@ class MagicCLI {
     return status;
   }
 
+  // ===============================================
+  // AUTONOMOUS AI TEAM METHODS
+  // ===============================================
+
+  /**
+   * 🚀 Build complete project from description using AI team
+   */
+  async buildAutonomously(args) {
+    const description = args.join(' ');
+    
+    if (!description) {
+      console.log('❓ Please provide a project description');
+      console.log('Usage: magic build "Create a todo app with user authentication"');
+      return;
+    }
+
+    console.log('🚀 Starting autonomous project build...');
+    console.log(`📋 Description: "${description}"`);
+    
+    try {
+      // Build project using the orchestrator
+      const result = await this.orchestrator.buildProject(description);
+      
+      console.log('✅ Project built successfully!');
+      console.log('\n📊 Build Results:');
+      console.log(`   Duration: ${Math.round(result.actualHours * 100) / 100} hours`);
+      console.log(`   Team: ${result.team.join(', ')}`);
+      console.log(`   Tasks completed: ${result.tasks.completed}/${result.tasks.total}`);
+      console.log(`   Quality score: ${Math.round(result.qualityScore * 100)}%`);
+      
+      if (result.artifacts) {
+        console.log('\n📁 Project artifacts:');
+        console.log(`   Repository: ${result.artifacts.codeRepository}`);
+        console.log(`   Documentation: ${result.artifacts.documentation}`);
+        if (result.artifacts.deploymentUrl) {
+          console.log(`   Deployed at: ${result.artifacts.deploymentUrl}`);
+        }
+      }
+      
+    } catch (error) {
+      console.error(`❌ Build failed: ${error.message}`);
+      process.exit(1);
+    }
+  }
+
+  /**
+   * 🔍 Parse project description into structured tasks
+   */
+  async parseProject(args) {
+    const description = args.join(' ');
+    
+    if (!description) {
+      console.log('❓ Please provide a project description to parse');
+      console.log('Usage: magic parse "Create a modern e-commerce platform"');
+      return;
+    }
+
+    console.log('🔍 Parsing project description...');
+    
+    try {
+      const projectSpec = await this.taskParser.parseProjectDescription(description);
+      const report = this.taskParser.generateParsingReport(projectSpec);
+      
+      console.log('\n📊 PARSING RESULTS:');
+      console.log('='.repeat(50));
+      
+      console.log('\n📋 Project Summary:');
+      console.log(`   Type: ${report.summary.projectType}`);
+      console.log(`   Confidence: ${report.summary.confidence}`);
+      console.log(`   Complexity: ${report.summary.complexity}`);
+      console.log(`   Estimated hours: ${report.summary.estimatedHours}`);
+      console.log(`   Recommended team size: ${report.summary.teamSize}`);
+      
+      console.log('\n🔧 Technology Stack:');
+      report.technologies.forEach(tech => console.log(`   • ${tech}`));
+      
+      console.log('\n✅ Top Requirements:');
+      report.topRequirements.forEach(req => console.log(`   • ${req}`));
+      
+      console.log('\n📈 Project Phases:');
+      report.phases.forEach(phase => {
+        console.log(`   ${phase.name}: ${phase.tasks} tasks, ${phase.hours}h`);
+      });
+      
+      // Offer to save detailed spec
+      console.log(`\n💾 Full project specification available with ${projectSpec.tasks.length} detailed tasks`);
+      console.log('Run "magic build" with the same description to start autonomous building');
+      
+    } catch (error) {
+      console.error(`❌ Parsing failed: ${error.message}`);
+      process.exit(1);
+    }
+  }
+
+  /**
+   * 🤖 Assemble and manage AI team for project
+   */
+  async manageAITeam(args) {
+    const subcommand = args[0] || 'status';
+    
+    try {
+      switch (subcommand) {
+        case 'assemble':
+          await this.assembleAITeam(args.slice(1));
+          break;
+        case 'status':
+          await this.showAITeamStatus();
+          break;
+        case 'analytics':
+          await this.showAIAnalytics(args[1]);
+          break;
+        default:
+          console.log('Usage: magic ai-team [assemble|status|analytics] [options]');
+      }
+    } catch (error) {
+      console.error(`❌ AI team management failed: ${error.message}`);
+      process.exit(1);
+    }
+  }
+
+  async assembleAITeam(args) {
+    const description = args.join(' ');
+    
+    if (!description) {
+      console.log('❓ Please provide project description for team assembly');
+      return;
+    }
+
+    console.log('🤖 Assembling optimal AI team...');
+    
+    const projectSpec = await this.taskParser.parseProjectDescription(description);
+    const team = this.specializationEngine.assembleOptimalTeam(projectSpec);
+    
+    console.log('\n👥 ASSEMBLED AI TEAM:');
+    console.log('='.repeat(40));
+    
+    team.forEach((ai, index) => {
+      console.log(`\n${index + 1}. ${ai.name} (${ai.id})`);
+      console.log(`   Specializations: ${ai.specializations.join(', ')}`);
+      console.log(`   Performance: ${Math.round(ai.performance.qualityScore * 100)}% quality`);
+      console.log(`   Max concurrent tasks: ${ai.performance.maxConcurrentTasks}`);
+      console.log(`   Status: ${ai.status}`);
+    });
+    
+    console.log(`\n✅ Team assembled: ${team.length} AI members ready for deployment`);
+  }
+
+  async showAITeamStatus() {
+    console.log('🤖 AI TEAM STATUS:');
+    console.log('='.repeat(30));
+    
+    const engineStatus = this.specializationEngine.getEngineStatus();
+    const servicesStatus = this.aiApiManager.getServicesStatus();
+    
+    console.log(`\n📊 Engine Status:`);
+    console.log(`   Registered AIs: ${engineStatus.registeredAIs}`);
+    console.log(`   Total specializations: ${engineStatus.totalSpecializations}`);
+    console.log(`   Performance entries: ${engineStatus.performanceHistoryEntries}`);
+    console.log(`   Average quality: ${Math.round(engineStatus.averageQualityScore * 100)}%`);
+    console.log(`   System health: ${engineStatus.systemHealth}`);
+    
+    console.log(`\n🔧 AI Services Status:`);
+    console.log(`   Total services: ${servicesStatus.total}`);
+    console.log(`   Healthy: ${servicesStatus.healthy}`);
+    console.log(`   Unhealthy: ${servicesStatus.unhealthy}`);
+    console.log(`   Simulated: ${servicesStatus.simulated}`);
+    
+    console.log('\n🏆 Top Performing AIs:');
+    engineStatus.topPerformingAIs.forEach((ai, index) => {
+      console.log(`   ${index + 1}. ${ai.name} - Quality: ${Math.round(ai.qualityScore * 100)}% (${ai.tasksCompleted} tasks)`);
+    });
+    
+    if (servicesStatus.services.length > 0) {
+      console.log('\n🤖 Individual AI Status:');
+      servicesStatus.services.forEach(service => {
+        const status = service.status === 'healthy' ? '✅' : 
+                      service.status === 'slow' ? '⚠️' : '❌';
+        console.log(`   ${status} ${service.name}: ${service.metrics.successRate} success, ${service.metrics.averageResponseTime}`);
+      });
+    }
+  }
+
+  async showAIAnalytics(aiId) {
+    if (!aiId) {
+      console.log('Usage: magic ai-team analytics <ai-id>');
+      console.log('Available AIs: claude-code, openai-gpt4, anthropic-claude, etc.');
+      return;
+    }
+
+    const analytics = this.specializationEngine.getAIAnalytics(aiId);
+    
+    if (!analytics) {
+      console.log(`❌ No analytics available for AI: ${aiId}`);
+      return;
+    }
+
+    console.log(`🧠 AI ANALYTICS: ${analytics.ai.name}`);
+    console.log('='.repeat(40));
+    
+    console.log(`\n📊 Performance Metrics:`);
+    console.log(`   Quality Score: ${Math.round(analytics.performance.qualityScore * 100)}%`);
+    console.log(`   Success Rate: ${Math.round(analytics.performance.successRate * 100)}%`);
+    console.log(`   Avg Response Time: ${analytics.performance.averageResponseTime}ms`);
+    console.log(`   Max Concurrent Tasks: ${analytics.performance.maxConcurrentTasks}`);
+    
+    console.log(`\n📈 Recent Activity:`);
+    console.log(`   Tasks Completed: ${analytics.ai.totalTasksCompleted}`);
+    console.log(`   Tasks Last Month: ${analytics.trends.tasksLastMonth}`);
+    console.log(`   Weekly Average: ${Math.round(analytics.trends.averageTasksPerWeek * 10) / 10}`);
+    console.log(`   Improvement Score: ${Math.round(analytics.trends.improvementScore * 1000) / 1000}`);
+    
+    if (analytics.trends.specialtyStrengths.length > 0) {
+      console.log(`\n💪 Specialty Strengths:`);
+      analytics.trends.specialtyStrengths.forEach(strength => {
+        console.log(`   • ${strength.specialty}: ${Math.round(strength.averageScore * 100)}% (${strength.taskCount} tasks)`);
+      });
+    }
+    
+    if (analytics.recommendations.length > 0) {
+      console.log(`\n💡 Recommendations:`);
+      analytics.recommendations.forEach(rec => {
+        const priority = rec.priority === 'high' ? '🔴' : 
+                        rec.priority === 'medium' ? '🟡' : '🟢';
+        console.log(`   ${priority} ${rec.message}`);
+      });
+    }
+  }
+
+  /**
+   * 🔧 Manage AI services and API connections
+   */
+  async manageAIServices(args) {
+    const subcommand = args[0] || 'list';
+    
+    try {
+      switch (subcommand) {
+        case 'list':
+          await this.listAIServices();
+          break;
+        case 'register':
+          await this.registerAIService(args.slice(1));
+          break;
+        case 'test':
+          await this.testAIServices(args[1]);
+          break;
+        case 'health':
+          await this.checkAIServicesHealth();
+          break;
+        default:
+          console.log('Usage: magic ai-services [list|register|test|health]');
+      }
+    } catch (error) {
+      console.error(`❌ AI services management failed: ${error.message}`);
+      process.exit(1);
+    }
+  }
+
+  async listAIServices() {
+    console.log('🔧 AI SERVICES:');
+    console.log('='.repeat(25));
+    
+    const status = this.aiApiManager.getServicesStatus();
+    
+    if (status.services.length === 0) {
+      console.log('No AI services registered');
+      return;
+    }
+    
+    status.services.forEach(service => {
+      const healthIcon = service.status === 'healthy' ? '✅' : 
+                        service.status === 'slow' ? '⚠️' : 
+                        service.status === 'unhealthy' ? '❌' : '🔄';
+      
+      console.log(`\n${healthIcon} ${service.name} (${service.id})`);
+      console.log(`   Type: ${service.type}`);
+      console.log(`   Specializations: ${service.specializations.join(', ')}`);
+      console.log(`   Priority: ${service.priority}/10`);
+      console.log(`   Success Rate: ${service.metrics.successRate}`);
+      console.log(`   Avg Response: ${service.metrics.averageResponseTime}`);
+      console.log(`   Load: ${service.metrics.currentLoad}/${service.metrics.maxLoad}`);
+      console.log(`   Tokens Used: ${service.tokenUsage.total} total`);
+    });
+    
+    console.log(`\n📊 Summary: ${status.healthy} healthy, ${status.unhealthy} unhealthy, ${status.simulated} simulated`);
+  }
+
+  async registerAIService(args) {
+    console.log('🔧 Registering new AI service...');
+    // This would typically involve interactive prompts for service details
+    console.log('Note: AI service registration requires configuration file or interactive setup');
+    console.log('See documentation for service configuration format');
+  }
+
+  async testAIServices(serviceId) {
+    if (serviceId) {
+      console.log(`🧪 Testing AI service: ${serviceId}`);
+      try {
+        const response = await this.aiApiManager.queryAI(serviceId, 'Test query for service health check');
+        console.log(`✅ ${serviceId} test successful`);
+        console.log(`Response time: ${response.metadata?.responseTime}ms`);
+      } catch (error) {
+        console.log(`❌ ${serviceId} test failed: ${error.message}`);
+      }
+    } else {
+      console.log('🧪 Testing all AI services...');
+      const services = this.aiApiManager.getServicesStatus().services;
+      
+      for (const service of services) {
+        try {
+          const response = await this.aiApiManager.queryAI(service.id, 'Health check');
+          console.log(`✅ ${service.name}: OK (${response.metadata?.responseTime}ms)`);
+        } catch (error) {
+          console.log(`❌ ${service.name}: FAILED - ${error.message}`);
+        }
+      }
+    }
+  }
+
+  async checkAIServicesHealth() {
+    console.log('🏥 Checking AI services health...');
+    await this.aiApiManager.performHealthChecks();
+    
+    setTimeout(() => {
+      const status = this.aiApiManager.getServicesStatus();
+      console.log(`\n📊 Health Check Results:`);
+      console.log(`   Healthy: ${status.healthy}/${status.total}`);
+      console.log(`   Response time issues: ${status.services.filter(s => s.status === 'slow').length}`);
+      console.log(`   Failed services: ${status.unhealthy}`);
+      
+      if (status.unhealthy > 0) {
+        console.log('\n❌ Unhealthy services detected. Check your API keys and network connection.');
+      } else {
+        console.log('\n✅ All services are healthy!');
+      }
+    }, 1000);
+  }
+
   ensureDirectoryExists(dirPath) {
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true });
@@ -1231,6 +1607,12 @@ CORE COMMANDS:
   deploy        🚀 Deploy to any platform with zero config
   ai            🧠 Get AI-powered development assistance
 
+AUTONOMOUS AI TEAM:
+  build         🚀 Build complete project from description using AI team
+  parse         🔍 Parse project description into structured tasks
+  ai-team       🤖 Assemble and manage AI team for project
+  ai-services   🔧 Manage AI services and API connections
+
 DEVELOPMENT WORKFLOW:
   start         🏃 Start development with auto-configuration
   test          🧪 Run intelligent test suite
@@ -1239,6 +1621,7 @@ DEVELOPMENT WORKFLOW:
 
 TEAM COLLABORATION:
   team          👥 Get optimal team composition
+  coordinate    🔄 Start terminal coordination session
   sync          🔄 Sync all development environments
 
 ADVANCED FEATURES:
@@ -1255,13 +1638,16 @@ UTILITIES:
   
 EXAMPLES:
   magic init                              # Initialize magic for current project
+  magic build "todo app with auth"       # Build complete project autonomously
+  magic parse "e-commerce platform"      # Parse project into tasks
+  magic ai-team assemble "web app"       # Assemble AI team for project
+  magic ai-services list                 # List all AI services
   magic ai "help me optimize this code"  # Get AI coding assistance  
   magic deploy staging                    # Deploy to staging environment
   magic start --hot-reload              # Start with hot reload
   magic generate component UserCard     # Generate React component
   magic doctor --fix                    # Diagnose and fix issues
   magic backup create my-backup         # Create a backup with name
-  magic backup list                     # List all available backups
 
 For more help on a specific command, run:
   magic <command> --help
