@@ -222,18 +222,31 @@ const SmartInput: React.FC<SmartInputProps> = ({
   };
 
   const getEnhancedSuggestions = async (input: string): Promise<string[]> => {
-    // Simulate AI enhancement analysis
-    const enhancements = [
-      'Jeg vil også ha en admin-panel for administrasjon',
-      'Prosjektet skal ha god SEO og være søkemotoroptimalisert',  
-      'Det må støtte flere betalingsmetoder som Stripe og PayPal',
-      'Systemet trenger automatiske e-postvarslinger til brukere',
-      'Applikasjonen skal ha avanserte analytics og rapporter',
-      'Det må være integrert med sosiale medier for deling'
+    try {
+      // Use real AI service for enhanced suggestions
+      const response = await fetch('/api/ai/enhance-suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input, context })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.suggestions || [];
+      }
+    } catch (error) {
+      console.error('Failed to get AI suggestions:', error);
+    }
+
+    // Fallback suggestions
+    const fallbackEnhancements = [
+      'med automatisk databackup og synkronisering',
+      'som har innebygd brukerautentisering og sikkerhet',
+      'med responsivt design for alle enheter',
+      'som integrerer med populære tjenester og API-er'
     ];
 
-    const relevantEnhancements = enhancements.filter(() => Math.random() > 0.7);
-    return relevantEnhancements.slice(0, 2);
+    return fallbackEnhancements.slice(0, 2);
   };
 
   // Handle input changes with debouncing

@@ -27,8 +27,14 @@ import {
   APIDocumentation,
   SessionLogs,
   AutonomousBuilder,
-  SimpleBuilder
+  SimpleBuilder,
+  UsageGuide
 } from './sections';
+
+// Import new advanced components
+import AIOptimizerDashboard from './components/AIOptimizerDashboard';
+import MultiUserInterface from './components/MultiUserInterface';
+import DeploymentInterface from './components/DeploymentInterface';
 
 const DeveloperSystem: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -132,6 +138,30 @@ const DeveloperSystem: React.FC = () => {
       title: 'Sesjonslogger', 
       icon: HiOutlineDocumentText,
       description: 'Samtalehistorikk og loggingssystem'
+    },
+    { 
+      id: 'ai-optimizer', 
+      title: 'AI Team Optimizer', 
+      icon: HiCpuChip,
+      description: 'ML-basert optimalisering av AI-team ytelse'
+    },
+    { 
+      id: 'multi-user', 
+      title: 'Multi-bruker Samarbeid', 
+      icon: HiUsers,
+      description: 'Sanntids koordinering mellom flere brukere'
+    },
+    { 
+      id: 'deployment', 
+      title: 'One-Click Deployment', 
+      icon: HiRocketLaunch,
+      description: 'Automatisk publisering til alle platformer'
+    },
+    { 
+      id: 'usage-guide', 
+      title: 'Bruksguide', 
+      icon: HiOutlineDocumentText,
+      description: 'Komplett steg-for-steg guide for alle funksjoner'
     }
   ];
 
@@ -216,6 +246,12 @@ const DeveloperSystem: React.FC = () => {
                         </button>
                         <button 
                           className="nordic-button"
+                          onClick={() => setActiveSection('usage-guide')}
+                        >
+                          📚 Bruksguide
+                        </button>
+                        <button 
+                          className="nordic-button"
                           onClick={() => setActiveSection('api-documentation')}
                         >
                           Dokumentasjon
@@ -275,6 +311,10 @@ const DeveloperSystem: React.FC = () => {
             {activeSection === 'performance-metrics' && <PerformanceMetrics isDarkTheme={isDarkTheme} />}
             {activeSection === 'api-documentation' && <APIDocumentation isDarkTheme={isDarkTheme} />}
             {activeSection === 'session-logs' && <SessionLogs isDarkTheme={isDarkTheme} />}
+            {activeSection === 'ai-optimizer' && <AIOptimizerDashboard isDarkTheme={isDarkTheme} />}
+            {activeSection === 'multi-user' && <MultiUserInterface isDarkTheme={isDarkTheme} />}
+            {activeSection === 'deployment' && <DeploymentInterface isDarkTheme={isDarkTheme} />}
+            {activeSection === 'usage-guide' && <UsageGuide isDarkTheme={isDarkTheme} />}
           </div>
         </main>
       </div>

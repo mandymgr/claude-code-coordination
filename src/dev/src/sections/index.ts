@@ -9,3 +9,4 @@ export { default as APIDocumentation } from './APIDocumentation';
 export { default as SessionLogs } from './SessionLogs';
 export { default as AutonomousBuilder } from './AutonomousBuilder';
 export { default as SimpleBuilder } from './SimpleBuilder';
+export { default as UsageGuide } from './UsageGuide';

@@ -11,6 +11,8 @@
     "build": "npm run build:dev && npm run package",
     "build:dev": "cd src/dev && npm run build 2>/dev/null || echo 'Dev system build skipped'",
     "package": "mkdir -p dist && tar -czf dist/claude-code-coordination-v2.0.0.tar.gz --exclude=node_modules --exclude=.git --exclude=dist .",
+    "backend": "node src/backend-server.js",
+    "backend:dev": "nodemon src/backend-server.js",
     "test": "jest",
     "lint": "eslint src/**/*.js || echo 'Lint completed'",
     "install-global": "npm install -g .",
@@ -32,12 +34,25 @@
     "chalk": "^4.1.2",
     "inquirer": "^8.2.6",
     "ws": "^8.14.2",
-    "chokidar": "^3.5.3"
+    "chokidar": "^3.5.3",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "pg": "^8.11.3",
+    "ioredis": "^5.3.2",
+    "openai": "^4.28.0",
+    "axios": "^1.6.7",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",
     "eslint": "^8.57.0",
-    "@types/jest": "^29.5.8"
+    "@types/jest": "^29.5.8",
+    "nodemon": "^3.0.3",
+    "@types/node": "^20.11.17"
   },
   "repository": {
     "type": "git",

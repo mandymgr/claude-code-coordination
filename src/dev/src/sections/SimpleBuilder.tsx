@@ -7,9 +7,11 @@ import {
   HiChevronDown,
   HiChevronRight,
   HiDocumentDuplicate,
-  HiCommandLine,
-  HiCube
+  HiCommandLine
 } from 'react-icons/hi2';
+import SmartInput from '../components/SmartInput';
+import RealtimeProgress from '../components/RealtimeProgress';
+import apiService from '../services/api';
 
 interface SimpleBuilderProps {
   isDarkTheme: boolean;
@@ -43,17 +45,44 @@ const SimpleBuilder: React.FC<SimpleBuilderProps> = ({ isDarkTheme }) => {
     setIsBuilding(true);
     
     try {
-      const input = selectedTemplate || description;
-      console.log('Building project:', input);
+      const projectDescription = selectedTemplate || description;
+      console.log('🚀 Starting real AI build:', projectDescription);
       
-      // Simulate building process
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Create project in database
+      const projectResponse = await apiService.createProject({
+        name: projectDescription.split(' ').slice(0, 3).join('-'),
+        description: projectDescription,
+        techStack: 'react-ts',
+        userId: 'user-' + Math.random().toString(36).substr(2, 9)
+      });
+
+      if (projectResponse.success) {
+        // Start real AI team building
+        const buildResponse = await apiService.buildWithAI({
+          projectDescription,
+          teamComposition: mode === 'simple' ? ['claude'] : ['claude', 'gpt-4'],
+          projectId: projectResponse.projectId
+        });
+
+        console.log('🎉 Real AI build completed:', buildResponse);
+      }
       
     } catch (error) {
-      console.error('Build failed:', error);
-    } finally {
+      console.error('❌ Real build failed:', error);
       setIsBuilding(false);
     }
+  };
+
+  const handleBuildComplete = (success: boolean) => {
+    setIsBuilding(false);
+    if (success) {
+      console.log('🎉 Build completed successfully!');
+      // Could show success notification here
+    }
+  };
+
+  const handleBuildCancel = () => {
+    setIsBuilding(false);
   };
 
   return (
@@ -132,40 +161,19 @@ const SimpleBuilder: React.FC<SimpleBuilderProps> = ({ isDarkTheme }) => {
             {/* Natural Language Input */}
             <div>
               <h3 className="nordic-h4 mb-4">Beskriv prosjektet ditt</h3>
-              <div className="nordic-card">
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Jeg vil lage en moderne todo-app med drag-and-drop, dark mode, og sync mellom enheter..."
-                  className="w-full h-32 p-4 border-0 resize-none bg-transparent"
-                  style={{outline: 'none'}}
-                />
-                
-                {/* Smart Suggestions */}
-                {description.length < 10 && (
-                  <div className="border-t p-4" style={{borderColor: 'var(--border-subtle)'}}>
-                    <div className="text-sm mb-2" style={{color: 'var(--text-muted)'}}>
-                      Forslag:
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {smartSuggestions.map((suggestion, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setDescription(suggestion)}
-                          className="text-xs px-3 py-1 rounded-full border transition-all hover:scale-105"
-                          style={{
-                            borderColor: 'var(--border-subtle)',
-                            color: 'var(--text-muted)',
-                            background: 'var(--surface-elevated)'
-                          }}
-                        >
-                          {suggestion}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <SmartInput
+                value={description}
+                onChange={setDescription}
+                placeholder="Jeg vil lage en moderne todo-app med drag-and-drop, dark mode, og sync mellom enheter..."
+                context="simple"
+                onSuggestionSelect={(suggestion) => {
+                  console.log('Selected suggestion:', suggestion);
+                  if (suggestion.category === 'template') {
+                    setSelectedTemplate(suggestion.id);
+                  }
+                }}
+                className="mb-4"
+              />
             </div>
 
             {/* Build Button */}
@@ -199,14 +207,15 @@ const SimpleBuilder: React.FC<SimpleBuilderProps> = ({ isDarkTheme }) => {
             <div className="nordic-grid-2">
               <div>
                 <h3 className="nordic-h4 mb-4">Prosjektbeskrivelse</h3>
-                <div className="nordic-card">
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Detaljert beskrivelse av prosjektet..."
-                    className="w-full h-40 p-4 border-0 resize-none bg-transparent"
-                  />
-                </div>
+                <SmartInput
+                  value={description}
+                  onChange={setDescription}
+                  placeholder="Detaljert beskrivelse av prosjektet med spesifiserte krav..."
+                  context="advanced"
+                  onSuggestionSelect={(suggestion) => {
+                    console.log('Advanced suggestion selected:', suggestion);
+                  }}
+                />
               </div>
               
               <div>
@@ -364,23 +373,13 @@ const SimpleBuilder: React.FC<SimpleBuilderProps> = ({ isDarkTheme }) => {
           </div>
         )}
 
-        {/* Building Progress */}
-        {isBuilding && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="nordic-card p-8 max-w-md w-full mx-4">
-              <div className="text-center">
-                <HiCube className="w-12 h-12 mx-auto mb-4 animate-bounce" style={{color: 'var(--accent-primary)'}} />
-                <h3 className="nordic-h4 mb-2">AI-teamet jobber</h3>
-                <p className="text-sm mb-4" style={{color: 'var(--text-muted)'}}>
-                  Analyserer krav og setter opp prosjekt...
-                </p>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-blue-500 h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Advanced Realtime Progress */}
+        <RealtimeProgress 
+          isBuilding={isBuilding}
+          projectDescription={selectedTemplate || description}
+          onComplete={handleBuildComplete}
+          onCancel={handleBuildCancel}
+        />
       </div>
     </section>
   );
