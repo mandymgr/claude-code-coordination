@@ -5,7 +5,7 @@ import {
   HiUserGroup,
   HiCube,
   HiCheckCircle,
-  HiExclamationTriangleIcon,
+  HiExclamationTriangle,
   HiArrowRight,
   HiPlay,
   HiPause,
