@@ -26,7 +26,8 @@ import {
   PerformanceMetrics,
   APIDocumentation,
   SessionLogs,
-  AutonomousBuilder
+  AutonomousBuilder,
+  SimpleBuilder
 } from './sections';
 
 const DeveloperSystem: React.FC = () => {
@@ -67,10 +68,16 @@ const DeveloperSystem: React.FC = () => {
       description: 'Systemoversikt og kom i gang'
     },
     { 
+      id: 'simple-builder', 
+      title: 'Enkel Bygging', 
+      icon: HiOutlineCube,
+      description: 'Enkel måte å bygge prosjekter - full funksjonalitet'
+    },
+    { 
       id: 'autonomous-builder', 
       title: 'Autonom Byggeverktøy', 
       icon: HiRocketLaunch,
-      description: 'Bygg komplette applikasjoner fra beskrivelser'
+      description: 'Avansert AI-team orkestrering og automatisering'
     },
     { 
       id: 'coordination-overview', 
@@ -191,9 +198,15 @@ const DeveloperSystem: React.FC = () => {
                       <div className="flex flex-col gap-3">
                         <button 
                           className="nordic-button-primary"
+                          onClick={() => setActiveSection('simple-builder')}
+                        >
+                          ✨ Enkel Bygging
+                        </button>
+                        <button 
+                          className="nordic-button"
                           onClick={() => setActiveSection('autonomous-builder')}
                         >
-                          🚀 Start Autonom Bygging
+                          🚀 Avansert AI-team
                         </button>
                         <button 
                           className="nordic-button"
@@ -251,6 +264,7 @@ const DeveloperSystem: React.FC = () => {
 
           {/* Content Sections - Show only active section */}
           <div className="relative">
+            {activeSection === 'simple-builder' && <SimpleBuilder isDarkTheme={isDarkTheme} />}
             {activeSection === 'autonomous-builder' && <AutonomousBuilder isDarkTheme={isDarkTheme} />}
             {activeSection === 'coordination-overview' && <CoordinationOverview isDarkTheme={isDarkTheme} />}
             {activeSection === 'ai-features' && <AIFeatures isDarkTheme={isDarkTheme} />}
