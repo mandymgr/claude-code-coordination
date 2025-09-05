@@ -1,0 +1,14 @@
+packages:
+  - 'packages/*'
+  
+# Claude Code Coordination Monorepo Workspace Configuration
+# 
+# Packages included:
+# - packages/server/     - Enterprise coordination server  
+# - packages/extension/  - VS Code extension
+# - packages/shared/     - Shared types and utilities
+# - packages/mobile-sdk/ - React Native SDK
+#
+# Note: This file defines which directories are treated as workspaces
+# in the pnpm monorepo. All packages should follow @claude-coordination/*
+# naming convention for consistency.
