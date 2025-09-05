@@ -1,0 +1,264 @@
+# Claude Code Coordination - Alerting Rules
+
+groups:
+  - name: claude_coordination_service_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(claude_coordination_http_request_errors_total[5m])) by (instance)
+            /
+            sum(rate(claude_coordination_http_requests_total[5m])) by (instance)
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+          service: claude-coordination
+        annotations:
+          summary: "High error rate detected for Claude Coordination service"
+          description: "Error rate is {{ $value }}% for instance {{ $labels.instance }}"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/high-error-rate"
+
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(claude_coordination_http_request_duration_bucket[5m])) by (instance, le)
+          ) > 2000
+        for: 5m
+        labels:
+          severity: warning
+          service: claude-coordination
+        annotations:
+          summary: "High latency detected for Claude Coordination service"
+          description: "95th percentile latency is {{ $value }}ms for instance {{ $labels.instance }}"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/high-latency"
+
+      - alert: ServiceDown
+        expr: up{job="claude-coordination-server"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: claude-coordination
+        annotations:
+          summary: "Claude Coordination service is down"
+          description: "Service instance {{ $labels.instance }} is not responding"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/service-down"
+
+  - name: claude_coordination_ai_alerts
+    rules:
+      - alert: AIProviderHighErrorRate
+        expr: |
+          (
+            sum(rate(claude_coordination_ai_request_errors_total[5m])) by (provider)
+            /
+            sum(rate(claude_coordination_ai_requests_total[5m])) by (provider)
+          ) * 100 > 10
+        for: 3m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: ai-provider
+        annotations:
+          summary: "High AI provider error rate detected"
+          description: "{{ $labels.provider }} error rate is {{ $value }}%"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/ai-provider-errors"
+
+      - alert: AIProviderHighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(claude_coordination_ai_request_duration_bucket[5m])) by (provider, le)
+          ) > 30000
+        for: 5m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: ai-provider
+        annotations:
+          summary: "High AI provider latency detected"
+          description: "{{ $labels.provider }} 95th percentile latency is {{ $value }}ms"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/ai-provider-latency"
+
+      - alert: CircuitBreakerOpen
+        expr: claude_coordination_circuit_breaker_state > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: circuit-breaker
+        annotations:
+          summary: "Circuit breaker is open"
+          description: "Circuit breaker for {{ $labels.service }} is in state {{ $value }} (0=closed, 1=open, 2=half-open)"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/circuit-breaker"
+
+      - alert: HighTokenConsumption
+        expr: |
+          sum(rate(claude_coordination_ai_tokens_used_total[1h])) by (provider) > 100000
+        for: 5m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: ai-cost
+        annotations:
+          summary: "High AI token consumption detected"
+          description: "{{ $labels.provider }} is consuming {{ $value }} tokens per hour"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/high-token-usage"
+
+  - name: claude_coordination_queue_alerts
+    rules:
+      - alert: HighQueueBacklog
+        expr: claude_coordination_queued_tasks > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: task-queue
+        annotations:
+          summary: "High task queue backlog"
+          description: "Task queue has {{ $value }} queued tasks"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/queue-backlog"
+
+      - alert: TaskProcessingStalled
+        expr: |
+          increase(claude_coordination_completed_tasks_total[10m]) == 0
+          and
+          claude_coordination_queued_tasks > 0
+        for: 10m
+        labels:
+          severity: critical
+          service: claude-coordination
+          component: task-queue
+        annotations:
+          summary: "Task processing appears to be stalled"
+          description: "No tasks have been completed in the last 10 minutes despite having queued tasks"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/task-processing-stalled"
+
+      - alert: HighTaskFailureRate
+        expr: |
+          (
+            sum(rate(claude_coordination_failed_tasks_total[5m]))
+            /
+            sum(rate(claude_coordination_completed_tasks_total[5m]) + rate(claude_coordination_failed_tasks_total[5m]))
+          ) * 100 > 20
+        for: 5m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: task-queue
+        annotations:
+          summary: "High task failure rate"
+          description: "Task failure rate is {{ $value }}%"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/high-task-failure"
+
+  - name: claude_coordination_database_alerts
+    rules:
+      - alert: DatabaseConnectionsHigh
+        expr: claude_coordination_db_connections_active > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: database
+        annotations:
+          summary: "High number of database connections"
+          description: "Database has {{ $value }} active connections"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/db-connections-high"
+
+      - alert: SlowDatabaseQueries
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(claude_coordination_db_query_duration_bucket[5m])) by (operation, le)
+          ) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "{{ $labels.operation }} queries have 95th percentile latency of {{ $value }}ms"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/slow-queries"
+
+      - alert: DatabaseQueryErrors
+        expr: |
+          sum(rate(claude_coordination_db_query_errors_total[5m])) by (operation) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: database
+        annotations:
+          summary: "Database query errors detected"
+          description: "{{ $labels.operation }} queries are failing at {{ $value }} errors/sec"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/db-query-errors"
+
+  - name: claude_coordination_cache_alerts
+    rules:
+      - alert: LowCacheHitRate
+        expr: |
+          (
+            sum(rate(claude_coordination_cache_hits_total[5m]))
+            /
+            (
+              sum(rate(claude_coordination_cache_hits_total[5m])) +
+              sum(rate(claude_coordination_cache_misses_total[5m]))
+            )
+          ) * 100 < 50
+        for: 10m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value }}%"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/low-cache-hit-rate"
+
+  - name: claude_coordination_quality_alerts
+    rules:
+      - alert: HighQualityGateFailureRate
+        expr: |
+          (
+            sum(rate(claude_coordination_quality_gate_failures_total[5m]))
+            /
+            sum(rate(claude_coordination_quality_gate_checks_total[5m]))
+          ) * 100 > 30
+        for: 5m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: quality-gate
+        annotations:
+          summary: "High quality gate failure rate"
+          description: "Quality gate failure rate is {{ $value }}%"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/quality-gate-failures"
+
+  - name: claude_coordination_business_alerts
+    rules:
+      - alert: LowCodeChangeSuccessRate
+        expr: |
+          (
+            sum(rate(claude_coordination_code_changes_applied_total[5m]))
+            /
+            sum(rate(claude_coordination_code_changes_generated_total[5m]))
+          ) * 100 < 70
+        for: 10m
+        labels:
+          severity: warning
+          service: claude-coordination
+          component: business-metrics
+        annotations:
+          summary: "Low code change success rate"
+          description: "Only {{ $value }}% of generated code changes are being applied"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/low-code-success-rate"
+
+      - alert: NoActiveUsers
+        expr: claude_coordination_active_users == 0
+        for: 30m
+        labels:
+          severity: info
+          service: claude-coordination
+          component: business-metrics
+        annotations:
+          summary: "No active users detected"
+          description: "No users have been active for the past 30 minutes"
+          runbook_url: "https://docs.claude-coordination.dev/runbooks/no-active-users"

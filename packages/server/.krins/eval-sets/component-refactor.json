@@ -1,0 +1,45 @@
+{
+  "id": "component-refactor",
+  "name": "React Component Refactoring",
+  "description": "Refactor a React component to use hooks",
+  "task": "Convert this class component to a functional component with hooks",
+  "context": {
+    "targetFiles": [
+      "components/UserProfile.jsx"
+    ],
+    "codeContext": "\nclass UserProfile extends React.Component {\n  constructor(props) {\n    super(props);\n    this.state = { user: null, loading: true };\n  }\n  \n  componentDidMount() {\n    this.fetchUser();\n  }\n  \n  fetchUser = async () => {\n    const user = await api.getUser(this.props.userId);\n    this.setState({ user, loading: false });\n  };\n  \n  render() {\n    const { user, loading } = this.state;\n    if (loading) return <div>Loading...</div>;\n    return <div>{user?.name}</div>;\n  }\n}",
+    "requirements": [
+      "Use useState and useEffect",
+      "Preserve original functionality",
+      "Add proper TypeScript types"
+    ]
+  },
+  "expectedOutcome": {
+    "success": true,
+    "minScore": 0.8,
+    "maxDuration": 45000,
+    "keywords": [
+      "useState",
+      "useEffect",
+      "hooks",
+      "functional"
+    ],
+    "antiPatterns": [
+      "class",
+      "componentDidMount",
+      "constructor"
+    ]
+  },
+  "metadata": {
+    "difficulty": "medium",
+    "category": "refactoring",
+    "tags": [
+      "react",
+      "hooks",
+      "refactoring",
+      "typescript"
+    ],
+    "createdAt": "2025-08-27T11:13:38.942Z",
+    "lastUpdated": "2025-08-27T11:13:38.942Z"
+  }
+}

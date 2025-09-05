@@ -1,0 +1,338 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-node-1-pvc
+  namespace: claude-coordination
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-node-2-pvc
+  namespace: claude-coordination
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-node-3-pvc
+  namespace: claude-coordination
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-node-1
+  namespace: claude-coordination
+  labels:
+    app: redis
+    node: "1"
+spec:
+  serviceName: redis-node-1-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+      node: "1"
+  template:
+    metadata:
+      labels:
+        app: redis
+        node: "1"
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        command:
+        - redis-server
+        - --port
+        - "6379"
+        - --cluster-enabled
+        - "yes"
+        - --cluster-config-file
+        - "nodes.conf"
+        - --cluster-node-timeout
+        - "5000"
+        - --appendonly
+        - "yes"
+        - --maxmemory
+        - "1gb"
+        - --maxmemory-policy
+        - "allkeys-lru"
+        ports:
+        - containerPort: 6379
+          name: redis
+        - containerPort: 16379
+          name: cluster
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-node-1-pvc
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-node-2
+  namespace: claude-coordination
+  labels:
+    app: redis
+    node: "2"
+spec:
+  serviceName: redis-node-2-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+      node: "2"
+  template:
+    metadata:
+      labels:
+        app: redis
+        node: "2"
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        command:
+        - redis-server
+        - --port
+        - "6380"
+        - --cluster-enabled
+        - "yes"
+        - --cluster-config-file
+        - "nodes.conf"
+        - --cluster-node-timeout
+        - "5000"
+        - --appendonly
+        - "yes"
+        - --maxmemory
+        - "1gb"
+        - --maxmemory-policy
+        - "allkeys-lru"
+        ports:
+        - containerPort: 6380
+          name: redis
+        - containerPort: 16380
+          name: cluster
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -p
+            - "6380"
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -p
+            - "6380"
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-node-2-pvc
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-node-3
+  namespace: claude-coordination
+  labels:
+    app: redis
+    node: "3"
+spec:
+  serviceName: redis-node-3-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+      node: "3"
+  template:
+    metadata:
+      labels:
+        app: redis
+        node: "3"
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        command:
+        - redis-server
+        - --port
+        - "6381"
+        - --cluster-enabled
+        - "yes"
+        - --cluster-config-file
+        - "nodes.conf"
+        - --cluster-node-timeout
+        - "5000"
+        - --appendonly
+        - "yes"
+        - --maxmemory
+        - "1gb"
+        - --maxmemory-policy
+        - "allkeys-lru"
+        ports:
+        - containerPort: 6381
+          name: redis
+        - containerPort: 16381
+          name: cluster
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -p
+            - "6381"
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -p
+            - "6381"
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-node-3-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-node-1-service
+  namespace: claude-coordination
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis
+  - port: 16379
+    targetPort: 16379
+    name: cluster
+  selector:
+    app: redis
+    node: "1"
+  clusterIP: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-node-2-service
+  namespace: claude-coordination
+spec:
+  ports:
+  - port: 6380
+    targetPort: 6380
+    name: redis
+  - port: 16380
+    targetPort: 16380
+    name: cluster
+  selector:
+    app: redis
+    node: "2"
+  clusterIP: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-node-3-service
+  namespace: claude-coordination
+spec:
+  ports:
+  - port: 6381
+    targetPort: 6381
+    name: redis
+  - port: 16381
+    targetPort: 16381
+    name: cluster
+  selector:
+    app: redis
+    node: "3"
+  clusterIP: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cluster-service
+  namespace: claude-coordination
+  labels:
+    app: redis
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis
+  selector:
+    app: redis
+  type: ClusterIP
