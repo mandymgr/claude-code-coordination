@@ -32,6 +32,8 @@ import {
 import ExecutiveDashboard from './sections/ExecutiveDashboard';
 import CollaborationDashboard from './sections/CollaborationDashboard';
 import AIAgentManagement from './sections/AIAgentManagement';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import ApiStatusIndicator from './components/ApiStatusIndicator';
 
 const DeveloperSystem: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -195,14 +197,19 @@ const DeveloperSystem: React.FC = () => {
             isDarkTheme ? 'border-slate-600/50' : 'border-slate-300/50'
           }`}>
             <div>
-              <h1 className={`text-2xl font-bold ${
-                isDarkTheme ? 'text-white' : 'text-slate-900'
-              }`} style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
-                Claude Code Coordination
-              </h1>
-              <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'} mt-1`}>
-                Advanced Multi-Terminal AI System
-              </p>
+              <div className="flex items-center space-x-3">
+                <div>
+                  <h1 className={`text-2xl font-bold ${
+                    isDarkTheme ? 'text-white' : 'text-slate-900'
+                  }`} style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
+                    Claude Code Coordination
+                  </h1>
+                  <p className={`text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'} mt-1`}>
+                    Advanced Multi-Terminal AI System
+                  </p>
+                </div>
+                <ApiStatusIndicator />
+              </div>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -356,7 +363,9 @@ const DeveloperSystem: React.FC = () => {
 
           {/* Content Sections */}
           <main className="relative">
-            <ExecutiveDashboard />
+            <ErrorBoundary>
+              <ExecutiveDashboard />
+            </ErrorBoundary>
             <CollaborationDashboard />
             <CoordinationOverview isDarkTheme={isDarkTheme} />
             <AIAgentManagement isDarkTheme={isDarkTheme} />

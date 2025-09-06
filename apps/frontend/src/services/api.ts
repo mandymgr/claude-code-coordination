@@ -3,6 +3,19 @@
 
 const API_BASE_URL = 'http://localhost:8080';
 
+// Development mode controls
+const isDevelopment = import.meta.env.MODE === 'development';
+const VERBOSE_LOGGING = false; // Set to true for detailed API logging
+
+// API status tracking
+let apiStatus: 'unknown' | 'available' | 'unavailable' = 'unknown';
+let lastStatusCheck = 0;
+const STATUS_CHECK_INTERVAL = 30000; // 30 seconds
+
+// Request deduplication for React StrictMode
+const requestCache = new Map<string, { promise: Promise<any>, timestamp: number }>();
+const CACHE_DURATION = 1000; // 1 second
+
 // Types for API responses
 export interface AIAgent {
   id: string;
@@ -143,6 +156,27 @@ export class CoordinationAPI {
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     return this.fetch<{ status: string; timestamp: string }>('/api/health');
   }
+
+  // Generic HTTP methods for collaboration features
+  async post<T>(endpoint: string, data?: any): Promise<T> {
+    return this.fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: data ? JSON.stringify(data) : undefined
+    });
+  }
+
+  async put<T>(endpoint: string, data?: any): Promise<T> {
+    return this.fetch(endpoint, {
+      method: 'PUT', 
+      headers: { 'Content-Type': 'application/json' },
+      body: data ? JSON.stringify(data) : undefined
+    });
+  }
+
+  async delete<T>(endpoint: string): Promise<T> {
+    return this.fetch(endpoint, { method: 'DELETE' });
+  }
 }
 
 // Default API instance
@@ -233,12 +267,103 @@ export const mockData = {
   },
 };
 
-// Helper function to use mock data when backend is unavailable
-export async function safeApiCall<T>(apiCall: () => Promise<T>, mockResponse: T): Promise<T> {
+// Enhanced error types
+export enum ApiErrorType {
+  NETWORK_ERROR = 'network',
+  TIMEOUT_ERROR = 'timeout', 
+  SERVER_ERROR = 'server',
+  EXPECTED_UNAVAILABLE = 'expected_unavailable'
+}
+
+// API status getter
+export function getApiStatus() {
+  return apiStatus;
+}
+
+// Check API availability (debounced)
+async function checkApiAvailability(): Promise<boolean> {
+  const now = Date.now();
+  if (now - lastStatusCheck < STATUS_CHECK_INTERVAL && apiStatus !== 'unknown') {
+    return apiStatus === 'available';
+  }
+
   try {
-    return await apiCall();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    
+    const response = await fetch(`${API_BASE_URL}/health`, {
+      signal: controller.signal,
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    clearTimeout(timeoutId);
+    const isAvailable = response.ok;
+    apiStatus = isAvailable ? 'available' : 'unavailable';
+    lastStatusCheck = now;
+    
+    return isAvailable;
   } catch (error) {
-    console.warn('API call failed, using mock data:', error);
+    apiStatus = 'unavailable';
+    lastStatusCheck = now;
+    return false;
+  }
+}
+
+// Enhanced helper function with better logging and error categorization
+export async function safeApiCall<T>(
+  apiCall: () => Promise<T>, 
+  mockResponse: T,
+  context?: string
+): Promise<T> {
+  const cacheKey = `${context || 'call'}-${Date.now()}`;
+  const now = Date.now();
+  
+  // Clean expired cache entries
+  for (const [key, { timestamp }] of requestCache.entries()) {
+    if (now - timestamp > CACHE_DURATION) {
+      requestCache.delete(key);
+    }
+  }
+  
+  try {
+    const result = await apiCall();
+    return result;
+  } catch (error) {
+    const errorType = categorizeError(error);
+    
+    // Only log unexpected errors in verbose mode
+    if (VERBOSE_LOGGING && isDevelopment) {
+      console.warn(`[API] ${context || 'Call'} failed (${errorType}):`, error);
+    }
+    
+    // Update API status based on error type
+    if (errorType === ApiErrorType.NETWORK_ERROR) {
+      apiStatus = 'unavailable';
+      lastStatusCheck = Date.now();
+    }
+    
     return mockResponse;
   }
+}
+
+// Categorize errors for better handling
+function categorizeError(error: any): ApiErrorType {
+  if (error?.name === 'AbortError') {
+    return ApiErrorType.TIMEOUT_ERROR;
+  }
+  
+  if (error?.message?.includes('fetch')) {
+    return ApiErrorType.NETWORK_ERROR;
+  }
+  
+  if (error?.status >= 500) {
+    return ApiErrorType.SERVER_ERROR;
+  }
+  
+  if (apiStatus === 'unavailable') {
+    return ApiErrorType.EXPECTED_UNAVAILABLE;
+  }
+  
+  return ApiErrorType.NETWORK_ERROR;
 }

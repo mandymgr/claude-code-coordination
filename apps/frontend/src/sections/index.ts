@@ -7,3 +7,4 @@ export { default as SessionCoordination } from './SessionCoordination';
 export { default as PerformanceMetrics } from './PerformanceMetrics';
 export { default as APIDocumentation } from './APIDocumentation';
 export { default as SessionLogs } from './SessionLogs';
+export { default as IntelligentServices } from './IntelligentServices';

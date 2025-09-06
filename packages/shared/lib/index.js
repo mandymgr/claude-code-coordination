@@ -20,6 +20,14 @@ exports.deepMerge = exports.isEmpty = exports.retry = exports.throttle = exports
 __exportStar(require("./types/common"), exports);
 __exportStar(require("./types/ai"), exports);
 __exportStar(require("./types/enterprise"), exports);
+__exportStar(require("./types/project"), exports);
+__exportStar(require("./types/team"), exports);
+// Services
+__exportStar(require("./services/UniversalProjectDetector"), exports);
+__exportStar(require("./services/TeamOptimizationAI"), exports);
+__exportStar(require("./services/AdaptiveAIAssistant"), exports);
+__exportStar(require("./services/SmartResponseCache"), exports);
+__exportStar(require("./services/BackupRestoreSystem"), exports);
 // Utilities
 __exportStar(require("./utils/validation"), exports);
 __exportStar(require("./utils/constants"), exports);

@@ -19,6 +19,11 @@
     "clean": "pnpm --filter=\"@claude-coordination/*\" run clean",
     "package": "mkdir -p dist && tar -czf dist/claude-code-coordination-v3.0.0.tar.gz --exclude=node_modules --exclude=.git --exclude=dist .",
     "magic": "pnpm --filter=\"@claude-coordination/cli\" run magic",
+    "magic-cli": "pnpm --filter=\"@claude-coordination/ai-core\" run magic-cli",
+    "ai-assist": "pnpm --filter=\"@claude-coordination/ai-core\" run ai-assist",
+    "deploy-engine": "pnpm --filter=\"@claude-coordination/ai-core\" run deploy-engine",
+    "dashboard": "pnpm --filter=\"@claude-coordination/ai-core\" run dashboard",
+    "realtime-hub": "pnpm --filter=\"@claude-coordination/ai-core\" run realtime-hub",
     "metrics": "node scripts/metrics.cjs",
     "install-global": "npm install -g .",
     "uninstall-global": "npm uninstall -g claude-code-coordination"
@@ -64,6 +69,7 @@
     "node": ">=18.0.0"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ]
 }

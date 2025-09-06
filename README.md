@@ -75,24 +75,29 @@
 
 ```
 claude-code-coordination/
-├── 📁 packages/              # Monorepo packages
-│   ├── shared/               # Common types and utilities
-│   ├── server/               # TypeScript backend with AI orchestration
-│   └── extension/            # VS Code extension
-├── 📁 src/                   # Legacy source (being migrated)
-│   ├── magic-cli.js          # Main CLI with 30+ commands
-│   ├── backend-server.js     # Real backend with PostgreSQL/Redis
-│   └── dev/                  # React development dashboard
-├── 📁 templates/             # Demo projects for testing
-│   ├── todo-nextjs/          # Next.js 14 with dark mode
-│   └── express-api/          # Express CRUD API with tests
-├── 📁 docs/                  # Organized documentation
-│   ├── architecture/         # System architecture docs
-│   ├── guides/              # User guides and tutorials
-│   └── plans/               # Development plans and roadmaps
-├── CLAUDE.md                # Development guidelines + current sprint
-├── CHANGELOG.md             # Version history
-└── README.md               # This file
+├── 📁 apps/                  # Applications
+│   ├── frontend/            # React development dashboard
+│   ├── backend/             # Express backend server
+│   └── extension/           # VS Code extension
+├── 📁 packages/             # Shared packages
+│   ├── ai-core/             # AI orchestration engine (NEW!)
+│   │   ├── src/             # Enhanced AI components
+│   │   └── scripts/         # Shell automation scripts
+│   ├── shared/              # Common types and utilities
+│   ├── server/              # Server components
+│   ├── cli/                 # Command line interface
+│   ├── mcp-server/          # MCP protocol server
+│   └── mobile-sdk/          # React Native SDK
+├── 📁 templates/            # Demo projects for testing
+│   ├── todo-nextjs/         # Next.js 14 with dark mode
+│   └── express-api/         # Express CRUD API with tests
+├── 📁 docs/                 # Organized documentation
+│   ├── architecture/        # System architecture docs
+│   ├── guides/             # User guides and tutorials
+│   └── plans/              # Development plans and roadmaps
+├── CLAUDE.md               # Development guidelines + current sprint
+├── CHANGELOG.md            # Version history
+└── README.md              # This file
 ```
 
 ## 🚀 Quick Start
@@ -102,41 +107,38 @@ claude-code-coordination/
 # Clone and install
 git clone https://github.com/mandymgr/claude-code-coordination.git
 cd claude-code-coordination
-npm install
+pnpm install
 
 # Setup environment
 cp .env.example .env
 # Add your AI API keys (OpenAI, Anthropic, Google)
 
-# Build and start
-npm run build
-npm run backend        # Start backend server
-npm run dev           # Start development dashboard
+# Build and start (uses pnpm workspaces)
+pnpm run build
+pnpm run magic-cli      # Enhanced AI coordination CLI
+pnpm run dashboard      # AI dashboard server
+cd apps/frontend && npm run dev  # React development interface
 ```
 
 ### Magic CLI Usage
 ```bash
-# Initialize magic environment
-magic init
+# Enhanced AI coordination CLI (via pnpm workspace)
+pnpm run magic-cli --help       # Show all commands
+pnpm run magic-cli init          # Initialize magic environment
+pnpm run magic-cli ai "your question"  # AI assistance
 
-# Build complete project from description
-krins build "Create a todo app with user authentication"
+# Direct node execution (alternative)
+node packages/ai-core/src/enhanced-magic-cli.cjs init
+node packages/ai-core/src/enhanced-magic-cli.cjs dashboard
 
-# Parse project into structured tasks
-magic parse "E-commerce platform with React frontend"
-
-# Assemble AI team for project
-magic ai-team assemble "Full-stack web application"
-
-# Deploy to any platform
-krins deploy --provider=vercel
-
-# Start coordination session
-magic coordinate "Working on user authentication"
+# AI assistance and deployment
+pnpm run ai-assist              # Adaptive AI assistant
+pnpm run deploy-engine          # Magic deployment engine
+pnpm run realtime-hub           # WebSocket coordination
 ```
 
 ### VS Code Extension
-1. Install the extension from `packages/extension/`
+1. Install the extension from `apps/extension/`
 2. Use Cmd+Shift+A to assign tasks to AI team
 3. Quality Gate will validate changes before apply
 4. Real-time file locking prevents conflicts

@@ -67,9 +67,9 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = ({ isDarkTheme = fal
   const loadAgentData = async () => {
     try {
       const [agentsData, sessionsData, performanceData] = await Promise.all([
-        safeApiCall(() => apiService.getAgents(), mockData.agents),
-        safeApiCall(() => apiService.getSessions(), mockData.sessions),
-        safeApiCall(() => apiService.getAgentPerformance(), generateMockPerformance())
+        safeApiCall(() => apiService.getAgents(), mockData.agents, 'AI Agents'),
+        safeApiCall(() => apiService.getSessions(), mockData.sessions, 'Agent Sessions'),
+        safeApiCall(() => apiService.getAgentPerformance(), generateMockPerformance(), 'Agent Performance')
       ]);
 
       setAgents(agentsData);

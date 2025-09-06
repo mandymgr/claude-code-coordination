@@ -128,33 +128,45 @@ npm run lint
 
 ## 🔧 Common Commands
 
-### Backend utvikling
+### AI Core utvikling (NY ARKITEKTUR)
 ```bash
-npm run backend          # Start backend server
-npm run backend:dev      # Start med nodemon
-node src/magic-cli.js    # Test CLI direkte
+pnpm run magic-cli       # Enhanced magic CLI via workspace
+pnpm run ai-assist       # Adaptive AI assistant
+pnpm run dashboard       # AI dashboard server
+pnpm run realtime-hub    # WebSocket coordination
+# Direct execution (alternative):
+node packages/ai-core/src/enhanced-magic-cli.cjs --help
+```
+
+### Backend utvikling  
+```bash
+cd apps/backend
+npm run dev              # Start backend med nodemon
+npm run build            # TypeScript build
+npm run start            # Production server
 ```
 
 ### Frontend utvikling
 ```bash
-cd src/dev
-npm run dev              # Development server
+cd apps/frontend
+npm run dev              # React development server
 npm run build            # Production build
 npm run preview          # Preview build
 ```
 
-### VS Code extension
+### VS Code extension (FLYTTET)
 ```bash
-cd extensions/vscode
+cd apps/extension        # NY LOKASJON
 npm install              # Install dependencies
 npm run compile          # Build extension
+npm run package          # Create VSIX package
 ```
 
-### Testing og deployment
+### Monorepo kommandoer
 ```bash
-magic build "test project"    # Test AI team building
-magic deploy --provider=vercel # Test deployment
-magic optimize               # Run ML optimization
+pnpm install             # Install all workspace dependencies
+pnpm run build           # Build all packages
+pnpm --filter="@claude-coordination/ai-core" run magic-cli
 ```
 
 ---
@@ -205,20 +217,34 @@ npm install
 ## 📚 Viktige filer og deres formål
 
 ### Root level
-- **`package.json`** - Hovedprosjekt dependencies og scripts
-- **`src/magic-cli.js`** - Hoved CLI entry point
-- **`src/backend-server.js`** - Express server og API endpoints
+- **`package.json`** - Hovedprosjekt dependencies og pnpm workspace scripts
+- **`pnpm-workspace.yaml`** - Monorepo workspace configuration
 - **`.env.example`** - Miljøvariabler template
 
-### Frontend (`src/dev/`)
+### AI Core (`packages/ai-core/`)
+- **`src/enhanced-magic-cli.cjs`** - Hoved CLI entry point (FLYTTET)
+- **`src/adaptive-ai-assistant.cjs`** - AI koordinering og assistanse
+- **`scripts/`** - Shell automation scripts
+- **`package.json`** - AI core package manifest
+
+### Frontend (`apps/frontend/`)
 - **`src/DeveloperSystem.tsx`** - Hovedkomponent med navigation
 - **`src/sections/`** - Alle funksjonalitets-seksjoner
 - **`src/components/`** - Gjenbrukbare UI-komponenter
 - **`src/services/api.ts`** - API-service for backend-kommunikasjon
 
-### VS Code Extension (`extensions/vscode/`)
-- **`src/extension.ts`** - Hovedfunksjonalitet
+### Backend (`apps/backend/`)
+- **`src/server.ts`** - Express server og API endpoints
+- **`src/routes/`** - API route handlers
+- **`src/services/`** - Backend business logic
+
+### VS Code Extension (`apps/extension/`)
+- **`src/extension.ts`** - Hovedfunksjonalitet (FLYTTET)
 - **`package.json`** - Extension manifest
+
+### Shared (`packages/shared/`)
+- **`src/types.ts`** - Felles TypeScript types
+- **`src/`** - Delte utilities og komponenter
 
 ---
 

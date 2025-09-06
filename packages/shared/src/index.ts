@@ -4,6 +4,15 @@
 export * from './types/common';
 export * from './types/ai';
 export * from './types/enterprise';
+export * from './types/project';
+export * from './types/team';
+
+// Services
+export * from './services/UniversalProjectDetector';
+export * from './services/TeamOptimizationAI';
+export * from './services/AdaptiveAIAssistant';
+export * from './services/SmartResponseCache';
+export * from './services/BackupRestoreSystem';
 
 // Utilities
 export * from './utils/validation';
@@ -44,6 +53,21 @@ export type {
   AuditEvent,
   Analytics
 } from './types/enterprise';
+
+export type {
+  ProjectAnalysis,
+  ProjectType,
+  MagicConfiguration,
+  DetectionPattern
+} from './types/project';
+
+export type {
+  TeamOptimizationSession,
+  ProjectRequirements,
+  TeamComposition,
+  AgentCapability,
+  OptimizationMetrics
+} from './types/team';
 
 export {
   validateEmail,

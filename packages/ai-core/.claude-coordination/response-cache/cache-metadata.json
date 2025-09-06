@@ -1,0 +1,15 @@
+{
+  "entries": {
+    "634873de9e2f0d978d1aae6e40104fdd5318a6358c992aaa2f91e33262adf045": {
+      "size": 976,
+      "created": 1757152489446,
+      "expiresAt": 1757238889446,
+      "lastAccessed": 1757152489446,
+      "accessCount": 1,
+      "query": "--help"
+    }
+  },
+  "totalSize": 976,
+  "created": 1757152489444,
+  "lastCleanup": 1757152489444
+}
