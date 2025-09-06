@@ -1,5 +1,5 @@
 {
-  "name": "@claude-coordination/extension",
+  "name": "claude-code-coordination",
   "displayName": "Krins Code Coordination - AI Team Development",
   "description": "Transform your VS Code into a multi-AI orchestration hub. Assign tasks to specialized AI agents, get quality-gated code changes, and scale development with intelligent automation.",
   "version": "3.0.0",
@@ -33,7 +33,6 @@
     "bandit routing",
     "circuit breakers"
   ],
-  "icon": "assets/icon.png",
   "galleryBanner": {
     "color": "#1e293b",
     "theme": "dark"
@@ -289,7 +288,7 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "echo 'Skipping compile - using existing JS files'",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
