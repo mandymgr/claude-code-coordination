@@ -1,0 +1,290 @@
+# Default values for claude-coordination
+# This is a YAML-formatted file.
+
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Application Configuration
+app:
+  name: claude-coordination
+  version: "1.0.0"
+  
+image:
+  registry: docker.io
+  repository: claude-coordination/server
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Deployment Configuration
+deployment:
+  replicaCount: 3
+  
+  # Resource Configuration
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+      
+  # Security Context
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+    
+  # Pod Disruption Budget
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+    
+  # Anti-affinity rules
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+              - claude-coordination
+          topologyKey: kubernetes.io/hostname
+
+# Service Configuration
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+  annotations: {}
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit-connections: "20"
+    nginx.ingress.kubernetes.io/rate-limit-requests-per-minute: "300"
+  hosts:
+    - host: api.krins.dev
+      paths:
+        - path: /
+          pathType: Prefix
+    - host: ws.krins.dev
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: claude-coordination-tls
+      hosts:
+        - api.krins.dev
+        - ws.krins.dev
+
+# Autoscaling Configuration
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+
+# Application Environment Variables
+env:
+  NODE_ENV: production
+  LOG_LEVEL: info
+  PORT: "8080"
+
+# Secret Configuration
+secrets:
+  # Database
+  POSTGRES_PASSWORD: ""
+  POSTGRES_REPLICATION_PASSWORD: ""
+  
+  # AI Service API Keys
+  ANTHROPIC_API_KEY: ""
+  OPENAI_API_KEY: ""
+  GOOGLE_API_KEY: ""
+  
+  # JWT Secret
+  JWT_SECRET: ""
+
+# PostgreSQL Configuration
+postgresql:
+  enabled: true
+  
+  primary:
+    name: postgres-primary
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
+    
+  replica:
+    enabled: true
+    name: postgres-replica
+    replicaCount: 1
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+
+# Redis Configuration
+redis:
+  enabled: true
+  cluster:
+    enabled: true
+    nodes: 3
+    
+  master:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+        
+  replica:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  
+  prometheus:
+    enabled: true
+    retention: "30d"
+    persistence:
+      enabled: true
+      size: 100Gi
+      storageClass: standard
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+        
+  grafana:
+    enabled: true
+    adminUser: admin
+    adminPassword: ""  # Set via secret
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: standard
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+        
+  jaeger:
+    enabled: true
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+
+# Security Configuration
+security:
+  networkPolicies:
+    enabled: true
+    
+  podSecurityPolicy:
+    enabled: true
+    
+  rbac:
+    enabled: true
+
+# Backup Configuration
+backup:
+  enabled: false
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: "90d"
+  
+  postgres:
+    enabled: true
+    
+  redis:
+    enabled: true
+
+# Development/Testing Configuration
+dev:
+  enabled: false
+  
+  # Development ingress
+  ingress:
+    hosts:
+      - host: dev-api.krins.dev
+        paths:
+          - path: /
+            pathType: Prefix
+            
+  # Development resources (lower limits)
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi

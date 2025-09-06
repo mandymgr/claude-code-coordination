@@ -1,0 +1,21 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+    "ms-vscode.vscode-typescript-next",
+    "github.vscode-github-actions",
+    "ms-python.python",
+    "ms-toolsai.jupyter",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "ms-vscode.vscode-docker",
+    "streetsidesoftware.code-spell-checker",
+    "github.vscode-pull-request-github"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-typescript",
+    "hookyqr.beautify"
+  ]
+}

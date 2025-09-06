@@ -1,6 +1,6 @@
 {
   "name": "claude-coordination-dev-system",
-  "version": "1.0.0", 
+  "version": "1.0.0",
   "description": "React-based development system for Claude Code Coordination",
   "private": true,
   "type": "module",
@@ -11,20 +11,23 @@
     "start": "npm run dev"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.7",
+    "@heroicons/react": "^2.2.0",
+    "framer-motion": "^12.23.12",
+    "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.12.0",
-    "recharts": "^2.8.0",
-    "lucide-react": "^0.294.0"
+    "recharts": "^2.15.4"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.0.0",
-    "typescript": "^5.0.0",
-    "vite": "^4.0.0",
-    "tailwindcss": "^3.3.0",
     "autoprefixer": "^10.4.0",
-    "postcss": "^8.4.0"
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5.0.0",
+    "vite": "^4.0.0"
   }
 }

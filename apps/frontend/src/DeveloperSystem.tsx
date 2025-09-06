@@ -31,6 +31,7 @@ import {
 } from './sections';
 import ExecutiveDashboard from './sections/ExecutiveDashboard';
 import CollaborationDashboard from './sections/CollaborationDashboard';
+import AIAgentManagement from './sections/AIAgentManagement';
 
 const DeveloperSystem: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -64,6 +65,12 @@ const DeveloperSystem: React.FC = () => {
       title: 'Coordination Overview', 
       icon: HiOutlineCube,
       description: 'System architecture and core concepts'
+    },
+    { 
+      id: 'ai-agent-management', 
+      title: 'KRIN AI Management', 
+      icon: HiCpuChip,
+      description: 'Manage KRIN and AI team coordination'
     },
     { 
       id: 'ai-features', 
@@ -352,6 +359,7 @@ const DeveloperSystem: React.FC = () => {
             <ExecutiveDashboard />
             <CollaborationDashboard />
             <CoordinationOverview isDarkTheme={isDarkTheme} />
+            <AIAgentManagement isDarkTheme={isDarkTheme} />
             <AIFeatures isDarkTheme={isDarkTheme} />
             <RealtimeHub isDarkTheme={isDarkTheme} />
             <TeamOptimization isDarkTheme={isDarkTheme} />

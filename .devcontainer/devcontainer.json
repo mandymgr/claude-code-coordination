@@ -1,0 +1,66 @@
+{
+  "name": "Claude Code Coordination",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "ms-vscode.vscode-typescript-next",
+        "github.vscode-github-actions",
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-vscode.vscode-docker",
+        "streetsidesoftware.code-spell-checker",
+        "github.vscode-pull-request-github"
+      ],
+      "settings": {
+        "anthropic.apiKey": "${env:ANTHROPIC_API_KEY}",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.eslint.fixAll": true
+        },
+        "typescript.preferences.includePackageJsonAutoImports": "on",
+        "tailwindCSS.includeLanguages": {
+          "typescript": "javascript",
+          "typescriptreact": "javascript"
+        }
+      }
+    }
+  },
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "NODE_ENV": "development"
+  },
+  "forwardPorts": [3000, 8080, 5173],
+  "portsAttributes": {
+    "3000": {
+      "label": "Frontend Dev Server",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "Backend API Server", 
+      "onAutoForward": "notify"
+    },
+    "5173": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "npm install && cd src/dev && npm install",
+  "postStartCommand": {
+    "server": "npm run backend &",
+    "frontend": "cd src/dev && npm run dev"
+  }
+}

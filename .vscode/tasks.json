@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Create CCC GitHub issues",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/ccc_github_issues.sh",
+      "options": {
+        "env": {
+          "REPO": "mandymgr/claude-code-coordination"
+        }
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": [],
+      "detail": "Creates all CCC roadmap issues and labels in the repository"
+    },
+    {
+      "label": "Check GitHub Project Status",
+      "type": "shell", 
+      "command": "gh project list --owner mandymgr",
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "Lists all GitHub Projects for the organization"
+    }
+  ]
+}

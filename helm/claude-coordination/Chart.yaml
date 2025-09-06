@@ -1,0 +1,20 @@
+apiVersion: v2
+name: claude-coordination
+description: A Helm chart for Claude Code Coordination Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+home: https://github.com/krins/claude-code-coordination
+sources:
+  - https://github.com/krins/claude-code-coordination
+maintainers:
+  - name: Krins Development Team
+    email: admin@krins.dev
+keywords:
+  - ai
+  - coordination
+  - development
+  - claude
+  - productivity
+annotations:
+  category: Development Tools
