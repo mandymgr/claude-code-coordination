@@ -12,8 +12,8 @@ import {
   createProjectFromPrompt,
   deploy,
   toggleFileLock,
-  lockCurrentFile,
-  unlockCurrentFile
+  lockCurrentFile as cmdLockCurrentFile,
+  unlockCurrentFile as cmdUnlockCurrentFile
 } from './commands/index.js';
 import { createOnboardingCommand } from './onboardingWizard.js';
 

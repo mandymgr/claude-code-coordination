@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import type { EditorContext } from '@ccc/shared';
+import type { EditorContext } from '@claude-coordination/shared';
 
 export async function captureContext(): Promise<EditorContext> {
   const activeEditor = vscode.window.activeTextEditor;
@@ -11,7 +11,9 @@ export async function captureContext(): Promise<EditorContext> {
   }
 
   const context: EditorContext = {
-    repoRoot: workspaceFolder.uri.fsPath
+    repoRoot: workspaceFolder.uri.fsPath,
+    workspaceRoot: workspaceFolder.uri.fsPath,
+    openFiles: []
   };
 
   // Add active file information if available
@@ -25,17 +27,7 @@ export async function captureContext(): Promise<EditorContext> {
     const selection = activeEditor.selection;
     if (!selection.isEmpty) {
       const selectedText = activeEditor.document.getText(selection);
-      context.selection = {
-        start: {
-          line: selection.start.line,
-          character: selection.start.character
-        },
-        end: {
-          line: selection.end.line, 
-          character: selection.end.character
-        },
-        text: selectedText
-      };
+      context.selection = selectedText;
     }
   }
 
@@ -57,9 +49,13 @@ async function detectProjectType(repoRoot: string): Promise<EditorContext['proje
   try {
     // Check for package.json to determine if it's a Node.js project
     const packageJsonPath = path.join(repoRoot, 'package.json');
-    const packageJsonExists = await vscode.workspace.fs.stat(vscode.Uri.file(packageJsonPath))
-      .then(() => true)
-      .catch(() => false);
+    let packageJsonExists: boolean;
+    try {
+      await vscode.workspace.fs.stat(vscode.Uri.file(packageJsonPath));
+      packageJsonExists = true;
+    } catch {
+      packageJsonExists = false;
+    }
 
     if (packageJsonExists) {
       // Read package.json to determine specific type

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, CheckCircle, Clock, Wifi, WifiOff } from 'lucide-react';
+import { CheckCircle, Clock, WifiOff } from 'lucide-react';
 import { getApiStatus } from '../services/api';
 
 interface ApiStatusIndicatorProps {

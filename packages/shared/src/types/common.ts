@@ -107,3 +107,20 @@ export interface WebSocketMessage {
   userId?: string;
   sessionId?: string;
 }
+
+export interface EditorContext {
+  repoRoot: string;
+  activeFile?: string;
+  selection?: string;
+  projectType?: string;
+  relatedFiles?: string[];
+  workspaceRoot: string;
+  selectedText?: string;
+  cursorPosition?: {
+    line: number;
+    column: number;
+  };
+  openFiles: string[];
+  language?: string;
+  recentFiles?: string[];
+}
