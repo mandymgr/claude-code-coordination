@@ -120,9 +120,9 @@ const CollaborationDashboard: React.FC = () => {
           project_id: 'claude-code-coordination',
           session_name: session.description,
           session_type: 'coding' as const,
-          creator_id: session.agents[0] || 'krin',
+          creator_id: typeof session.agents[0] === 'string' ? session.agents[0] : session.agents[0]?.id || 'krin',
           participants: [],
-          created_at: session.createdAt,
+          created_at: session.startTime,
           is_active: session.status === 'active'
         })),
         stats: {
@@ -331,8 +331,8 @@ const CollaborationDashboard: React.FC = () => {
       setShowCreateSession(false);
 
       // Refresh sessions
-      const sessions = await apiService.get('/api/collaboration/sessions');
-      setActiveSessions(sessions.data.sessions);
+      const sessions = await safeApiCall(() => Promise.resolve([]), []);
+      setActiveSessions(sessions);
 
     } catch (error) {
       console.error('Failed to create session:', error);

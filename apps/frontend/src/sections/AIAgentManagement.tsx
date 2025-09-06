@@ -169,7 +169,7 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = () => {
             <Activity className="w-4 h-4" />
             <span>{agents.filter(a => a.status === 'active').length} Active</span>
           </Badge>
-          <Button variant="default" onClick={loadAgentData}>
+          <Button variant="outline" onClick={loadAgentData}>
             Refresh
           </Button>
         </div>
@@ -202,7 +202,7 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = () => {
                 <div className="flex items-center space-x-2">
                   <div className={`w-3 h-3 rounded-full ${getAgentStatusColor(agent.status)}`} />
                   <Badge 
-                    variant={agent.status === 'active' ? 'default' : 'secondary'}
+                    variant={agent.status === 'active' ? 'default' : 'default'}
                     className="capitalize"
                   >
                     {agent.status}
@@ -238,10 +238,7 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = () => {
               <div className="mt-4 flex space-x-2">
                 <Button 
                   size="sm" 
-                  onClick={(e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    assignTask(agent.id);
-                  }}
+                  onClick={() => assignTask(agent.id)}
                   disabled={agent.status === 'busy'}
                 >
                   <Target className="w-4 h-4 mr-1" />
@@ -372,7 +369,7 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = () => {
                           </div>
                         </div>
                         <Badge 
-                          variant={task.status === 'completed' ? 'default' : 'secondary'}
+                          variant={task.status === 'completed' ? 'default' : 'default'}
                           className="capitalize"
                         >
                           {task.status}
@@ -424,15 +421,15 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span>Auto-assign tasks</span>
-                  <Button variant="default" size="sm">Configure</Button>
+                  <Button variant="outline" size="sm">Configure</Button>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Max concurrent tasks</span>
-                  <Button variant="default" size="sm">3</Button>
+                  <Button variant="outline" size="sm">3</Button>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Priority level</span>
-                  <Button variant="default" size="sm">High</Button>
+                  <Button variant="outline" size="sm">High</Button>
                 </div>
               </CardContent>
             </Card>

@@ -49,6 +49,9 @@ interface ROIData {
     total_roi_percentage: number;
     quarterly_savings: number;
     annual_projection: number;
+    average_roi_percentage: number;
+    total_value_created: number;
+    confidence_score: number;
   };
   calculations: Array<{
     calculation_type: string;
@@ -57,12 +60,6 @@ interface ROIData {
     baseline_value: number;
     confidence_score: number;
   }>;
-  summary: {
-    total_roi_percentage: number;
-    average_roi_percentage: number;
-    total_value_created: number;
-    confidence_score: number;
-  };
 }
 
 interface ExecutiveReport {
@@ -158,9 +155,12 @@ const ExecutiveDashboard: React.FC = () => {
       // Generate ROI data based on metrics
       const roiData = {
         summary: {
-          total_roi_percentage: 285, // Average of the calculated ROIs
+          total_roi_percentage: 285,
           quarterly_savings: 125000,
-          annual_projection: 500000
+          annual_projection: 500000,
+          average_roi_percentage: 218,
+          total_value_created: 2500000,
+          confidence_score: 89.2
         },
         calculations: [
           {

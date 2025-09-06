@@ -70,7 +70,7 @@ const QualityGates: React.FC<QualityGatesProps> = ({ isDarkTheme = false }) => {
     try {
       const [gates, rules] = await Promise.all([
         safeApiCall(() => apiService.getQualityGates(), mockData.qualityGates),
-        safeApiCall(() => generateMockRules(), generateMockRules())
+        safeApiCall(() => Promise.resolve(generateMockRules()), generateMockRules())
       ]);
 
       setQualityGates(gates);
@@ -294,7 +294,7 @@ const QualityGates: React.FC<QualityGatesProps> = ({ isDarkTheme = false }) => {
           </p>
         </div>
         <div className="flex items-center space-x-4">
-          <Badge variant="outline" className="flex items-center space-x-2">
+          <Badge variant="default" className="flex items-center space-x-2">
             <Shield className="w-4 h-4" />
             <span>{qualityGates.filter(g => g.status === 'passed').length} Passed</span>
           </Badge>
@@ -312,19 +312,20 @@ const QualityGates: React.FC<QualityGatesProps> = ({ isDarkTheme = false }) => {
       {/* Quality Gate Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {qualityGates.map(gate => (
-          <Card 
+          <div 
             key={gate.id}
             className={`cursor-pointer transition-all duration-200 ${
               selectedGate?.id === gate.id ? 'ring-2 ring-blue-500' : 'hover:shadow-md'
             }`}
             onClick={() => setSelectedGate(gate)}
           >
+            <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center space-x-2">
                 <Shield className="w-5 h-5" />
                 <span>{gate.name}</span>
               </CardTitle>
-              <Badge className={getStatusColor(gate.status)}>
+              <Badge variant="default" className={getStatusColor(gate.status)}>
                 {getStatusIcon(gate.status)}
                 <span className="ml-1 capitalize">{gate.status}</span>
               </Badge>
@@ -338,7 +339,7 @@ const QualityGates: React.FC<QualityGatesProps> = ({ isDarkTheme = false }) => {
                       <span className="text-sm">{check.name}</span>
                     </div>
                     <Badge 
-                      variant="outline" 
+                      variant="default" 
                       className={`text-xs ${getStatusColor(check.status)}`}
                     >
                       {check.status}
@@ -360,13 +361,14 @@ const QualityGates: React.FC<QualityGatesProps> = ({ isDarkTheme = false }) => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+            </Card>
+          </div>
         ))}
       </div>
 
       {/* Detailed Quality Gate View */}
       {selectedGate && (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue={activeTab}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="issues">Issues</TabsTrigger>
@@ -485,7 +487,7 @@ const QualityGates: React.FC<QualityGatesProps> = ({ isDarkTheme = false }) => {
                         <h4 className="font-medium mb-3 flex items-center space-x-2">
                           <FileText className="w-4 h-4" />
                           <span>{analysis.file}</span>
-                          <Badge variant="outline">{analysis.issues.length} issues</Badge>
+                          <Badge variant="default">{analysis.issues.length} issues</Badge>
                         </h4>
                         <div className="space-y-2 ml-6">
                           {analysis.issues.map((issue, index) => (
@@ -498,7 +500,7 @@ const QualityGates: React.FC<QualityGatesProps> = ({ isDarkTheme = false }) => {
                                     </Badge>
                                     <span className="text-sm font-medium">{issue.rule}</span>
                                     {issue.fixable && (
-                                      <Badge variant="outline" className="text-xs">
+                                      <Badge variant="default" className="text-xs">
                                         <Wrench className="w-3 h-3 mr-1" />
                                         fixable
                                       </Badge>
@@ -541,11 +543,11 @@ const QualityGates: React.FC<QualityGatesProps> = ({ isDarkTheme = false }) => {
                           <Badge className={getSeverityColor(rule.severity)}>
                             {rule.severity}
                           </Badge>
-                          <Badge variant="outline" className="text-xs capitalize">
+                          <Badge variant="default" className="text-xs capitalize">
                             {rule.type}
                           </Badge>
                           {rule.autoFix && (
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="default" className="text-xs">
                               <Wrench className="w-3 h-3 mr-1" />
                               auto-fix
                             </Badge>
@@ -556,7 +558,7 @@ const QualityGates: React.FC<QualityGatesProps> = ({ isDarkTheme = false }) => {
                         </p>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge variant={rule.enabled ? "default" : "secondary"}>
+                        <Badge variant="default">
                           {rule.enabled ? "Enabled" : "Disabled"}
                         </Badge>
                         <Button variant="outline" size="sm">
