@@ -2,7 +2,7 @@ import express from 'express';
 import { NeuralArchitectureSearch } from '../services/automl/neuralArchitectureSearch';
 import * as tf from '@tensorflow/tfjs-node';
 
-const router = express.Router();
+const router: express.Router = express.Router();
 
 // Store active NAS instances
 const nasInstances = new Map<string, NeuralArchitectureSearch>();

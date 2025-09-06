@@ -5,7 +5,7 @@ import { ComplianceSuite } from '../services/enterprise/complianceSuite.js';
 import { AdvancedAnalytics } from '../services/enterprise/advancedAnalytics.js';
 import { whiteLabelService } from '../services/enterprise/whiteLabelSolutions.js';
 
-const router = express.Router();
+const router: express.Router = express.Router();
 
 // Multi-Tenant Management Routes
 router.post('/tenants', async (req, res) => {

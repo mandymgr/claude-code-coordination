@@ -7,7 +7,7 @@ export function createCommercialRouter(
   pricingService: PricingService,
   marketingService: MarketingService,
   salesService: SalesService
-) {
+): express.Router {
   const router = express.Router();
 
   // Pricing Routes

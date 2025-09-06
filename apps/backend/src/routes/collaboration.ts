@@ -4,7 +4,7 @@ import { TelemetryUtils } from '../utils/telemetry';
 import { body, param, query, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 
-const router = Router();
+const router: Router = Router();
 
 // Rate limiting for collaboration endpoints
 const collaborationRateLimit = rateLimit({

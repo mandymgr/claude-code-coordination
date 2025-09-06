@@ -9,20 +9,10 @@ import {
   Brain, 
   Cpu, 
   Zap, 
-  Clock, 
   Target, 
   Activity, 
-  Settings, 
-  Play, 
-  Pause, 
-  Square,
-  TrendingUp,
-  Users,
-  MessageSquare,
-  Code,
-  Database,
-  Cloud,
-  Shield
+  Settings,
+  TrendingUp
 } from 'lucide-react';
 import { apiService, mockData, safeApiCall, AIAgent, CoordinationSession } from '../services/api';
 
@@ -49,14 +39,13 @@ interface AgentPerformance {
   specializations: string[];
 }
 
-const AIAgentManagement: React.FC<AIAgentManagementProps> = ({ isDarkTheme = false }) => {
+const AIAgentManagement: React.FC<AIAgentManagementProps> = () => {
   const [agents, setAgents] = useState<AIAgent[]>([]);
-  const [sessions, setSessions] = useState<CoordinationSession[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<AIAgent | null>(null);
   const [agentTasks, setAgentTasks] = useState<AgentTask[]>([]);
   const [performance, setPerformance] = useState<Record<string, AgentPerformance>>({});
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab] = useState('overview');
 
   useEffect(() => {
     loadAgentData();
@@ -66,14 +55,13 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = ({ isDarkTheme = fal
 
   const loadAgentData = async () => {
     try {
-      const [agentsData, sessionsData, performanceData] = await Promise.all([
+      const [agentsData, , performanceData] = await Promise.all([
         safeApiCall(() => apiService.getAgents(), mockData.agents, 'AI Agents'),
         safeApiCall(() => apiService.getSessions(), mockData.sessions, 'Agent Sessions'),
         safeApiCall(() => apiService.getAgentPerformance(), generateMockPerformance(), 'Agent Performance')
       ]);
 
       setAgents(agentsData);
-      setSessions(sessionsData);
       setPerformance(performanceData);
       
       if (!selectedAgent && agentsData.length > 0) {
@@ -177,11 +165,11 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = ({ isDarkTheme = fal
           </p>
         </div>
         <div className="flex items-center space-x-4">
-          <Badge variant="outline" className="flex items-center space-x-2">
+          <Badge variant="default" className="flex items-center space-x-2">
             <Activity className="w-4 h-4" />
             <span>{agents.filter(a => a.status === 'active').length} Active</span>
           </Badge>
-          <Button variant="outline" onClick={loadAgentData}>
+          <Button variant="default" onClick={loadAgentData}>
             Refresh
           </Button>
         </div>
@@ -190,13 +178,14 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = ({ isDarkTheme = fal
       {/* Agent Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {agents.map(agent => (
-          <Card 
+          <div 
             key={agent.id}
             className={`cursor-pointer transition-all duration-200 ${
               selectedAgent?.id === agent.id ? 'ring-2 ring-blue-500' : 'hover:shadow-md'
             }`}
             onClick={() => setSelectedAgent(agent)}
           >
+            <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
@@ -235,12 +224,12 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = ({ isDarkTheme = fal
 
               <div className="mt-4 flex flex-wrap gap-1">
                 {agent.capabilities.slice(0, 3).map(capability => (
-                  <Badge key={capability} variant="outline" className="text-xs">
+                  <Badge key={capability} variant="default" className="text-xs">
                     {capability}
                   </Badge>
                 ))}
                 {agent.capabilities.length > 3 && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="default" className="text-xs">
                     +{agent.capabilities.length - 3}
                   </Badge>
                 )}
@@ -249,7 +238,7 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = ({ isDarkTheme = fal
               <div className="mt-4 flex space-x-2">
                 <Button 
                   size="sm" 
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     assignTask(agent.id);
                   }}
@@ -261,12 +250,13 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = ({ isDarkTheme = fal
               </div>
             </CardContent>
           </Card>
+          </div>
         ))}
       </div>
 
       {/* Detailed Agent View */}
       {selectedAgent && (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue={activeTab}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="tasks">Active Tasks</TabsTrigger>
@@ -312,7 +302,7 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = ({ isDarkTheme = fal
                     <h4 className="font-medium mb-2">Capabilities</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedAgent.capabilities.map(capability => (
-                        <Badge key={capability} variant="outline">
+                        <Badge key={capability} variant="default">
                           {capability}
                         </Badge>
                       ))}
@@ -434,15 +424,15 @@ const AIAgentManagement: React.FC<AIAgentManagementProps> = ({ isDarkTheme = fal
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span>Auto-assign tasks</span>
-                  <Button variant="outline" size="sm">Configure</Button>
+                  <Button variant="default" size="sm">Configure</Button>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Max concurrent tasks</span>
-                  <Button variant="outline" size="sm">3</Button>
+                  <Button variant="default" size="sm">3</Button>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Priority level</span>
-                  <Button variant="outline" size="sm">High</Button>
+                  <Button variant="default" size="sm">High</Button>
                 </div>
               </CardContent>
             </Card>

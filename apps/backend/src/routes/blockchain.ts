@@ -1,7 +1,7 @@
 import express from 'express';
 import { Web3Service } from '../services/blockchain/web3Service';
 
-const router = express.Router();
+const router: express.Router = express.Router();
 
 // Configuration for different networks
 const blockchainConfig = {

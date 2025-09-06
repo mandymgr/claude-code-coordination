@@ -5,7 +5,7 @@ import { TelemetryUtils } from '../utils/telemetry';
 import { query, param, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 
-const router = Router();
+const router: Router = Router();
 
 // Rate limiting for analytics endpoints
 const analyticsRateLimit = rateLimit({

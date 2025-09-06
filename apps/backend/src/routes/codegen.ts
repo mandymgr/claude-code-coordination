@@ -3,7 +3,7 @@ import { CodegenOrchestrator } from '../services/codegen/codegenOrchestrator';
 import { IntelligentCodeGenerator } from '../services/codegen/intelligentCodeGenerator';
 import { AutomatedRefactoringEngine } from '../services/codegen/automatedRefactoring';
 
-const router = Router();
+const router: Router = Router();
 
 // Initialize services
 const orchestrator = new CodegenOrchestrator({
