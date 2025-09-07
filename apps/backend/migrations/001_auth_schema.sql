@@ -1,4 +1,4 @@
--- Claude Code Coordination Authentication Schema
+-- KRINS-Universe-Builder Authentication Schema
 -- Migration 001: Initial authentication and authorization tables
 
 -- Enable UUID extension

@@ -1,24 +1,24 @@
-# Production Prometheus Configuration for Claude Code Coordination
+# Production Prometheus Configuration for KRINS-Universe-Builder
 
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'claude-coordination-prod'
+    cluster: 'krins-universe-builder-prod'
     environment: 'production'
 
 rule_files:
-  - "claude_coordination_alerts.yml"
+  - "krins_universe_alerts.yml"
   - "infrastructure_alerts.yml"
 
 scrape_configs:
   # Claude Coordination Server instances
-  - job_name: 'claude-coordination-server'
+  - job_name: 'krins-universe-builder-server'
     kubernetes_sd_configs:
       - role: pod
         namespaces:
           names:
-            - claude-coordination
+            - krins-universe-builder
     relabel_configs:
       # Only scrape pods with prometheus.io/scrape annotation
       - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
@@ -60,11 +60,11 @@ scrape_configs:
   # PostgreSQL monitoring
   - job_name: 'postgresql'
     static_configs:
-      - targets: ['postgres-primary-service.claude-coordination:5432']
+      - targets: ['postgres-primary-service.krins-universe-builder:5432']
         labels:
           instance: 'postgres-primary'
           role: 'primary'
-      - targets: ['postgres-replica-service.claude-coordination:5432']
+      - targets: ['postgres-replica-service.krins-universe-builder:5432']
         labels:
           instance: 'postgres-replica'
           role: 'replica'
@@ -76,9 +76,9 @@ scrape_configs:
   - job_name: 'redis-cluster'
     static_configs:
       - targets: 
-          - 'redis-node-1-service.claude-coordination:6379'
-          - 'redis-node-2-service.claude-coordination:6380'
-          - 'redis-node-3-service.claude-coordination:6381'
+          - 'redis-node-1-service.krins-universe-builder:6379'
+          - 'redis-node-2-service.krins-universe-builder:6380'
+          - 'redis-node-3-service.krins-universe-builder:6381'
         labels:
           cluster: 'redis-cluster'
 
@@ -146,7 +146,7 @@ scrape_configs:
   # Traefik Load Balancer
   - job_name: 'traefik'
     static_configs:
-      - targets: ['traefik.claude-coordination:8080']
+      - targets: ['traefik.krins-universe-builder:8080']
     metrics_path: /metrics
 
 alerting:
@@ -155,7 +155,7 @@ alerting:
         - role: pod
       relabel_configs:
         - source_labels: [__meta_kubernetes_namespace]
-          regex: claude-coordination-monitoring
+          regex: krins-universe-builder-monitoring
           action: keep
         - source_labels: [__meta_kubernetes_pod_label_app]
           regex: alertmanager

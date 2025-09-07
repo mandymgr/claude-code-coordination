@@ -1,3 +1,268 @@
+export declare function generateId(): string;
+export declare function formatDate(date: Date): string;
+export declare function formatTime(date: Date): string;
+export declare function formatDuration(ms: number): string;
+export declare function validateEmail(email: string): boolean;
+export declare const API_ENDPOINTS: {
+    readonly HEALTH: "/api/health";
+    readonly AUTH: "/api/auth";
+    readonly USERS: "/api/users";
+    readonly TASKS: "/api/tasks";
+    readonly AI: "/api/ai";
+    readonly COORDINATION: "/api/coordination";
+    readonly QUALITY: "/api/quality";
+    readonly METRICS: "/api/metrics";
+    readonly WEBSOCKET: "/ws";
+};
+export declare const WEBSOCKET_EVENTS: {
+    readonly CONNECT: "connect";
+    readonly DISCONNECT: "disconnect";
+    readonly TASK_UPDATE: "task_update";
+    readonly AGENT_STATUS: "agent_status";
+    readonly QUALITY_RESULT: "quality_result";
+    readonly SESSION_UPDATE: "session_update";
+};
+export declare const ERROR_CODES: {
+    readonly UNAUTHORIZED: "UNAUTHORIZED";
+    readonly FORBIDDEN: "FORBIDDEN";
+    readonly NOT_FOUND: "NOT_FOUND";
+    readonly VALIDATION_ERROR: "VALIDATION_ERROR";
+    readonly INTERNAL_ERROR: "INTERNAL_ERROR";
+    readonly AGENT_UNAVAILABLE: "AGENT_UNAVAILABLE";
+    readonly TASK_FAILED: "TASK_FAILED";
+};
+export declare enum UserRole {
+    ADMIN = "admin",
+    DEVELOPER = "developer",
+    VIEWER = "viewer",
+    GUEST = "guest"
+}
+export interface User {
+    id: string;
+    username: string;
+    email: string;
+    role: UserRole;
+    permissions: string[];
+    createdAt: Date;
+    updatedAt: Date;
+    lastLoginAt?: Date;
+    isActive: boolean;
+    profile?: UserProfile;
+    tenantId?: string;
+}
+export interface UserProfile {
+    firstName?: string;
+    lastName?: string;
+    avatar?: string;
+    timezone?: string;
+    language?: string;
+    preferences: Record<string, any>;
+}
+export interface Session {
+    id: string;
+    userId: string;
+    token: string;
+    refreshToken?: string;
+    expiresAt: Date;
+    createdAt: Date;
+    ipAddress?: string;
+    userAgent?: string;
+    isActive: boolean;
+}
+export interface ApiResponse<T = any> {
+    success: boolean;
+    data?: T;
+    error?: {
+        code: string;
+        message: string;
+        details?: Record<string, any>;
+    };
+    meta?: {
+        timestamp: string;
+        requestId?: string;
+        pagination?: PaginationMeta;
+    };
+}
+export interface PaginationMeta {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+}
+export declare enum AIAgentType {
+    CLAUDE = "claude",
+    GPT4 = "gpt4",
+    GEMINI = "gemini",
+    CUSTOM = "custom"
+}
+export declare enum AgentStatus {
+    IDLE = "idle",
+    BUSY = "busy",
+    ERROR = "error",
+    MAINTENANCE = "maintenance",
+    OFFLINE = "offline"
+}
+export declare enum AICapability {
+    CODE_GENERATION = "code_generation",
+    CODE_REVIEW = "code_review",
+    DOCUMENTATION = "documentation",
+    TESTING = "testing",
+    DEBUGGING = "debugging",
+    REFACTORING = "refactoring",
+    UI_UX = "ui_ux",
+    DEVOPS = "devops",
+    DATABASE = "database",
+    ARCHITECTURE = "architecture"
+}
+export interface AIProvider {
+    name: string;
+    model: string;
+    apiKey?: string;
+    endpoint?: string;
+    maxTokens?: number;
+    temperature?: number;
+    capabilities: AICapability[];
+    cost: {
+        inputTokens: number;
+        outputTokens: number;
+    };
+}
+export interface AIAgent {
+    id: string;
+    name: string;
+    type: AIAgentType;
+    provider?: AIProvider;
+    specialization: AICapability[];
+    status: AgentStatus;
+    performance?: AgentPerformance;
+    configuration?: Record<string, any>;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+export interface AgentPerformance {
+    totalTasks: number;
+    completedTasks: number;
+    failedTasks: number;
+    averageResponseTime: number;
+    successRate: number;
+    costEfficiency: number;
+    lastUpdated: Date;
+}
+export declare enum TaskStatus {
+    PENDING = "pending",
+    IN_PROGRESS = "in_progress",
+    REVIEW = "review",
+    COMPLETED = "completed",
+    CANCELLED = "cancelled",
+    BLOCKED = "blocked"
+}
+export declare enum TaskPriority {
+    LOW = "low",
+    MEDIUM = "medium",
+    HIGH = "high",
+    CRITICAL = "critical"
+}
+export declare enum TaskType {
+    CODE_GENERATION = "code_generation",
+    CODE_REVIEW = "code_review",
+    BUG_FIX = "bug_fix",
+    FEATURE_IMPLEMENTATION = "feature_implementation",
+    DOCUMENTATION = "documentation",
+    TESTING = "testing",
+    REFACTORING = "refactoring",
+    DEPLOYMENT = "deployment"
+}
+export interface CoordinationTask {
+    id: string;
+    title: string;
+    description: string;
+    status: TaskStatus;
+    priority: TaskPriority;
+    assignedTo?: string;
+    assignedBy: string;
+    projectId?: string;
+    createdAt: Date;
+    updatedAt: Date;
+    dueDate?: Date;
+    completedAt?: Date;
+    tags: string[];
+    metadata: Record<string, any>;
+}
+export interface TaskContext {
+    projectPath: string;
+    files: string[];
+    dependencies: string[];
+    framework?: string;
+    language?: string;
+    gitBranch?: string;
+    environment?: string;
+}
+export interface TaskRequirements {
+    deliverables: string[];
+    constraints: string[];
+    quality: QualityRequirements;
+    timeline?: string;
+}
+export interface QualityRequirements {
+    testCoverage?: number;
+    codeQuality?: number;
+    security?: boolean;
+    performance?: boolean;
+    accessibility?: boolean;
+}
+export interface AITaskRequest {
+    id: string;
+    type: TaskType;
+    description: string;
+    context: TaskContext;
+    requirements: TaskRequirements;
+    assignedAgent?: string;
+    status: TaskStatus;
+    createdAt: Date;
+    startedAt?: Date;
+    completedAt?: Date;
+    result?: AITaskResult;
+}
+export interface AITaskResult {
+    success: boolean;
+    deliverables: TaskDeliverable[];
+    metrics: TaskMetrics;
+    feedback?: string;
+    recommendations?: string[];
+}
+export declare enum DeliverableType {
+    SOURCE_CODE = "source_code",
+    TEST_FILE = "test_file",
+    DOCUMENTATION = "documentation",
+    CONFIGURATION = "configuration",
+    PATCH = "patch"
+}
+export interface TaskDeliverable {
+    type: DeliverableType;
+    path: string;
+    content: string;
+    changes?: FileChange[];
+}
+export declare enum ChangeType {
+    ADD = "add",
+    MODIFY = "modify",
+    DELETE = "delete"
+}
+export interface FileChange {
+    type: ChangeType;
+    line?: number;
+    oldContent?: string;
+    newContent?: string;
+}
+export interface TaskMetrics {
+    tokensUsed: number;
+    responseTime: number;
+    cost: number;
+    qualityScore: number;
+    testCoverage?: number;
+}
 export interface ClaudeSession {
     /** Unique session identifier */
     id: string;
@@ -155,4 +420,17 @@ export interface CoordinationUtils {
     /** Format timestamp for display */
     formatTimestamp(timestamp: string): string;
 }
+export interface WebSocketMessage {
+    type: string;
+    payload: any;
+    timestamp: string;
+    id?: string;
+    userId?: string;
+    sessionId?: string;
+}
+export type { ClaudeSession as CoordinationSession };
+export type { CoordinationMessage as Message };
+export type { FileLock as Lock };
+export type { GlobalCoordinationState as CoordinationState };
+export type { CoordinationConfig as Config };
 //# sourceMappingURL=types.d.ts.map

@@ -1,5 +1,5 @@
 {
-  "name": "claude-coordination-mcp-server",
+  "name": "@claude-coordination/mcp-server",
   "version": "3.0.0",
   "description": "MCP Server for Claude Code Coordination - KRIN AI Team Management",
   "main": "dist/index.js",

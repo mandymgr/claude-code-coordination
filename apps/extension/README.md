@@ -13,8 +13,9 @@ Transform your VS Code into a multi-AI orchestration hub. Assign tasks to specia
 - **Session Management** - Track who's working on what
 
 ### 🤖 **AI Integration**
-- **Context-Aware AI** - Ask AI about selected code
-- **Smart Suggestions** - Get intelligent code recommendations
+- **Context-Aware AI** - Ask AI about selected code with full project context
+- **ADR-Aware Code Generation** - AI reads and follows your Architecture Decision Records
+- **Smart Suggestions** - Get intelligent code recommendations based on team standards
 - **Terminal Integration** - Full Magic CLI access from VS Code
 
 ### 👥 **Team Collaboration**
@@ -66,6 +67,50 @@ npm run compile
 ### **Context Menus**
 - Right-click file → Lock/Unlock file
 - Right-click code → AI assistance
+
+## 🧠 ADR-Aware AI Features
+
+### **Architecture Decision Records Integration**
+
+The extension automatically reads and follows your team's Architecture Decision Records (ADRs) when generating code.
+
+#### **How It Works**
+1. **Automatic Detection** - Extension searches for ADR repositories in your workspace
+2. **Context Loading** - Reads relevant ADRs based on your task description
+3. **Guided Generation** - AI generates code following architectural decisions
+4. **Visual Feedback** - Shows which ADRs are being applied in output panel
+
+#### **Supported ADR Locations**
+```
+your-workspace/
+├── docs/adr/                    # Current project ADRs
+├── ../adr-repo/docs/adr/        # Sibling ADR repository  
+└── ../Krins-Dev-Memory-OS/docs/adr/  # Standard ADR template
+```
+
+#### **Usage Example**
+
+1. **Task**: "Create user authentication system"
+2. **Extension finds**: `ADR-0002: Implement OAuth2 authentication`
+3. **AI generates**: OAuth2-compliant authentication code
+4. **Output shows**: 
+   ```
+   📋 Applied ADRs for task: "Create user authentication system"
+   ──────────────────────────────────────────────────
+   • ADR-0002: Implement OAuth2 authentication
+     Component: platform/auth
+     Decision: Use OAuth2 with PKCE for enhanced security...
+
+   💡 Recommendations:
+   • Consider ADR-0002: Implement OAuth2 authentication
+   • Review security guidelines in ADR-0002
+   ```
+
+#### **Commands**
+
+- `Claude Code: Assign Task (ADR-Aware)` - Generate code with architectural context
+- `Claude Code: Show ADR Context` - View available ADRs for current workspace
+- `Claude Code: Suggest New ADR` - Get suggestions for creating new architectural decisions
 
 ## 🔧 Configuration
 

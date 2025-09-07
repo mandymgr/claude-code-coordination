@@ -1,4 +1,4 @@
-# Multi-stage production-optimized Docker build for Claude Code Coordination
+# Multi-stage production-optimized Docker build for KRINS-Universe-Builder
 # Built for enterprise deployment with security hardening and performance optimization
 
 # ===== SECURITY-HARDENED BUILD STAGE =====
@@ -28,15 +28,23 @@ RUN npm install -g pnpm@8.15.0
 
 # Copy package files for all workspaces
 COPY packages/shared/package*.json ./packages/shared/
-COPY packages/server/package*.json ./packages/server/
-COPY packages/extension/package*.json ./packages/extension/
+COPY packages/ai-core/package*.json ./packages/ai-core/
+COPY packages/cli/package*.json ./packages/cli/
+COPY packages/mcp-server/package*.json ./packages/mcp-server/
+COPY apps/backend/package*.json ./apps/backend/
+COPY apps/frontend/package*.json ./apps/frontend/
+COPY apps/extension/package*.json ./apps/extension/
 
 # Install dependencies (use frozen lockfile for consistency)
 RUN pnpm install --frozen-lockfile --production=false
 
 # Copy source code
 COPY packages/shared ./packages/shared
-COPY packages/server ./packages/server
+COPY packages/ai-core ./packages/ai-core
+COPY packages/cli ./packages/cli
+COPY packages/mcp-server ./packages/mcp-server
+COPY apps/backend ./apps/backend
+COPY apps/frontend ./apps/frontend
 COPY tsconfig.base.json ./
 
 # Build shared package first
@@ -67,8 +75,8 @@ RUN apk update && apk upgrade && \
     && rm -rf /tmp/*
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S claude && \
-    adduser -S claude -u 1001 -G claude
+RUN addgroup -g 1001 -S krins && \
+    adduser -S krins -u 1001 -G krins
 
 # Set security-focused environment variables
 ENV NODE_ENV=production \
@@ -116,9 +124,9 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 EXPOSE 8080
 
 # Set resource limits and security labels
-LABEL maintainer="Claude Code Coordination Team" \
+LABEL maintainer="KRINS-Universe-Builder Team" \
       version="3.0.0" \
-      description="Enterprise AI Coordination Platform" \
+      description="Ultimate AI Development Universe" \
       security.non-root="true" \
       security.hardened="true"
 
@@ -166,7 +174,7 @@ RUN mkdir -p /app/logs /app/tmp
 EXPOSE 8080
 
 # Start development server with hot reload
-CMD ["pnpm", "--filter", "@ccc/server", "dev"]
+CMD ["pnpm", "--filter", "@claude-coordination/backend", "dev"]
 
 # ===== TESTING STAGE =====
 FROM development AS testing
@@ -178,4 +186,4 @@ RUN pnpm add -g vitest @vitest/ui
 COPY packages/server/src ./packages/server/src
 
 # Run tests
-CMD ["pnpm", "--filter", "@ccc/server", "test"]
+CMD ["pnpm", "--filter", "@claude-coordination/backend", "test"]
