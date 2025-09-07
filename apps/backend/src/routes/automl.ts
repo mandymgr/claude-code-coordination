@@ -1,5 +1,5 @@
 import express from 'express';
-import { NeuralArchitectureSearch } from '../services/automl/neuralArchitectureSearch';
+import { NeuralArchitectureSearch } from '../services/ai-automation/automl/neuralArchitectureSearch';
 import * as tf from '@tensorflow/tfjs-node';
 
 const router: express.Router = express.Router();

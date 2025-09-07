@@ -1,7 +1,7 @@
 import express from 'express';
-import { QuantumComputingService } from '../services/quantum/quantumComputingService';
+import { QuantumComputingService } from '../services/advanced-tech/quantum/quantumComputingService';
 
-const router = express.Router();
+const router: express.Router = express.Router();
 const quantumService = new QuantumComputingService();
 
 // Initialize quantum service

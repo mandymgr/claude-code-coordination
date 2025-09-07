@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-// import { multiTenantService } from '../services/enterprise/multiTenant.js';
-// import { performanceMonitor } from '../services/performance/memoryManager.js';
+// import { multiTenantService } from '../services/enterprise/enterprise/multiTenant.js';
+// import { performanceMonitor } from '../services/monitoring/performance/memoryManager.js';
 
 interface HealthCheckResult {
   status: 'healthy' | 'unhealthy' | 'degraded';

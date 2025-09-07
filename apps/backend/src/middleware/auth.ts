@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/auth/authService';
-import { RBACService } from '../services/auth/rbacService';
-import { AuditService, AuditEventType } from '../services/auth/auditService';
+import { AuthService } from '../services/enterprise/auth/authService';
+import { RBACService } from '../services/enterprise/auth/rbacService';
+import { AuditService, AuditEventType } from '../services/enterprise/auth/auditService';
 import { TelemetryUtils } from '../utils/telemetry';
 import jwt from 'jsonwebtoken';
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { Web3Service } from '../services/blockchain/web3Service';
+import { Web3Service } from '../services/advanced-tech/blockchain/web3Service';
 
 const router: express.Router = express.Router();
 

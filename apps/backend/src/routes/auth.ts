@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { AuthService } from '../services/auth/authService';
-import { RBACService } from '../services/auth/rbacService';
-import { AuditService } from '../services/auth/auditService';
+import { AuthService } from '../services/enterprise/auth/authService';
+import { RBACService } from '../services/enterprise/auth/rbacService';
+import { AuditService } from '../services/enterprise/auth/auditService';
 import { authenticate, authorize, AuthenticatedRequest } from '../middleware/auth';
 import { TelemetryUtils } from '../utils/telemetry';
 import { body, validationResult } from 'express-validator';

@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { authenticate, authorize, AuthenticatedRequest } from '../middleware/auth';
-import { metricsCollector } from '../services/analytics/metricsCollector';
+import { metricsCollector } from '../services/monitoring/analytics/metricsCollector';
 import { TelemetryUtils } from '../utils/telemetry';
 import { query, param, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';

@@ -1,8 +1,8 @@
 import express from 'express';
 import multer from 'multer';
-import { VoiceInterface } from '../services/voice/voiceInterface';
+import { VoiceInterface } from '../services/advanced-tech/voice/voiceInterface';
 
-const router = express.Router();
+const router: express.Router = express.Router();
 
 // Configure multer for audio file uploads
 const upload = multer({

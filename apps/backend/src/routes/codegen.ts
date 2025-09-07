@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { CodegenOrchestrator } from '../services/codegen/codegenOrchestrator';
-import { IntelligentCodeGenerator } from '../services/codegen/intelligentCodeGenerator';
-import { AutomatedRefactoringEngine } from '../services/codegen/automatedRefactoring';
+import { CodegenOrchestrator } from '../services/system-building/codegen/codegenOrchestrator';
+import { IntelligentCodeGenerator } from '../services/system-building/codegen/intelligentCodeGenerator';
+import { AutomatedRefactoringEngine } from '../services/system-building/codegen/automatedRefactoring';
 
 const router: Router = Router();
 
@@ -114,6 +114,7 @@ router.post('/generate/function', async (req, res) => {
       description: description || name,
       userId: 'anonymous',
       projectId: 'default',
+      priority: 'medium',
       requirements: [{
         type: 'functional',
         description: description || name,
@@ -178,6 +179,7 @@ router.post('/generate/component', async (req, res) => {
       description: `Create a ${type} component named ${name}`,
       userId: 'anonymous',
       projectId: 'default',
+      priority: 'medium',
       requirements: [{
         type: 'functional',
         description: `Create a ${type} component named ${name}`,
@@ -564,6 +566,7 @@ router.post('/template', async (req, res) => {
       description: `Generate code from template: ${templateName}`,
       userId: 'anonymous',
       projectId: 'default',
+      priority: 'medium',
       requirements: [{
         type: 'functional',
         description: `Generate code from template: ${templateName}`,

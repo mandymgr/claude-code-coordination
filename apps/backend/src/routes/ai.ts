@@ -3,8 +3,8 @@ import { authenticate, authorize, AuthenticatedRequest } from '../middleware/aut
 import { TelemetryUtils } from '../utils/telemetry';
 import { body, param, query, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
-import IntelligentAIRouter, { AIRequest } from '../services/ai/intelligentRouter';
-import AIOrchestrationService, { OrchestrationTask } from '../services/ai/orchestrationService';
+import IntelligentAIRouter, { AIRequest } from '../services/ai-automation/ai/intelligentRouter';
+import AIOrchestrationService, { OrchestrationTask } from '../services/ai-automation/ai/orchestrationService';
 
 const router: Router = Router();
 

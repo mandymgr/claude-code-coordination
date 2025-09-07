@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
-import { PricingService } from '../services/commercial/pricingService';
-import { MarketingService } from '../services/commercial/marketingService';
-import { SalesService } from '../services/commercial/salesService';
+import { PricingService } from '../services/enterprise/commercial/pricingService';
+import { MarketingService } from '../services/enterprise/commercial/marketingService';
+import { SalesService } from '../services/enterprise/commercial/salesService';
 
 export function createCommercialRouter(
   pricingService: PricingService,

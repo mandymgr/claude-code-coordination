@@ -1,7 +1,7 @@
 {
-  "name": "claude-code-coordination",
+  "name": "krins-universe-builder",
   "version": "3.0.0",
-  "description": "Claude Code Coordination - Enterprise AI Development Platform",
+  "description": "KRINS-Universe-Builder - The Ultimate AI Development Universe",
   "type": "module",
   "main": "packages/cli/dist/index.js",
   "bin": {
@@ -11,13 +11,13 @@
   "scripts": {
     "build": "pnpm run build:packages && npm run package",
     "build:packages": "pnpm --filter=\"@claude-coordination/*\" run build",
-    "dev": "pnpm --filter=\"@claude-coordination/server\" run dev",
+    "dev": "pnpm --filter=\"@claude-coordination/backend\" run dev",
     "dev:all": "pnpm --parallel --filter=\"@claude-coordination/*\" run dev",
-    "start": "pnpm --filter=\"@claude-coordination/server\" run start",
+    "start": "pnpm --filter=\"@claude-coordination/backend\" run start",
     "test": "pnpm --filter=\"@claude-coordination/*\" run test",
     "lint": "pnpm --filter=\"@claude-coordination/*\" run lint",
     "clean": "pnpm --filter=\"@claude-coordination/*\" run clean",
-    "package": "mkdir -p dist && tar -czf dist/claude-code-coordination-v3.0.0.tar.gz --exclude=node_modules --exclude=.git --exclude=dist .",
+    "package": "mkdir -p dist && tar -czf dist/krins-universe-builder-v3.0.0.tar.gz --exclude=node_modules --exclude=.git --exclude=dist .",
     "magic": "pnpm --filter=\"@claude-coordination/cli\" run magic",
     "magic-cli": "pnpm --filter=\"@claude-coordination/ai-core\" run magic-cli",
     "ai-assist": "pnpm --filter=\"@claude-coordination/ai-core\" run ai-assist",
@@ -26,20 +26,23 @@
     "realtime-hub": "pnpm --filter=\"@claude-coordination/ai-core\" run realtime-hub",
     "metrics": "node scripts/metrics.cjs",
     "install-global": "npm install -g .",
-    "uninstall-global": "npm uninstall -g claude-code-coordination"
+    "uninstall-global": "npm uninstall -g krins-universe-builder"
   },
   "keywords": [
-    "claude",
+    "krins",
+    "universe",
+    "builder",
     "ai",
-    "coordination",
+    "automation",
     "enterprise",
     "development",
-    "automation",
+    "quantum",
+    "blockchain",
     "cli",
     "vscode",
     "monorepo"
   ],
-  "author": "Claude Code Coordination Team",
+  "author": "KRINS-Universe-Builder Team",
   "license": "MIT",
   "dependencies": {
     "uuid": "^10.0.0",
@@ -59,12 +62,12 @@
   "packageManager": "pnpm@8.15.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mandymgr/claude-code-coordination.git"
+    "url": "git+https://github.com/mandymgr/KRINS-Universe-Builder.git"
   },
   "bugs": {
-    "url": "https://github.com/mandymgr/claude-code-coordination/issues"
+    "url": "https://github.com/mandymgr/KRINS-Universe-Builder/issues"
   },
-  "homepage": "https://claude-coordination.vercel.app",
+  "homepage": "https://krins-universe-builder.vercel.app",
   "engines": {
     "node": ">=18.0.0"
   },

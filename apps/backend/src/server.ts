@@ -25,7 +25,7 @@ import performanceRouter from './routes/performance';
 import { enterpriseRouter } from './routes/enterprise';
 import { authenticate, authorize } from './middleware/auth';
 import { healthChecker } from './middleware/healthCheck';
-import RealtimeCollaborationService from './services/collaboration/realtimeService';
+import RealtimeCollaborationService from './services/system-building/collaboration/realtimeService';
 import { TelemetryUtils } from './utils/telemetry';
 
 // Initialize OpenTelemetry if configured

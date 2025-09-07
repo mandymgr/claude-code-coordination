@@ -1,4 +1,4 @@
-# Claude Code Coordination - Ontwikkelingsguide
+# KRINS-Universe-Builder - Development Guide
 
 ## 🚀 AKTIV SPRINT 1 (2025-08-26 → 2025-09-06)
 
@@ -166,7 +166,7 @@ npm run package          # Create VSIX package
 ```bash
 pnpm install             # Install all workspace dependencies
 pnpm run build           # Build all packages
-pnpm --filter="@claude-coordination/ai-core" run magic-cli
+pnpm --filter="@krins-universe/ai-core" run magic-cli
 ```
 
 ---

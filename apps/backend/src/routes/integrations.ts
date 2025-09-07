@@ -1,15 +1,15 @@
 import express, { Request, Response } from 'express';
-import { SlackIntegrationService } from '../services/integrations/slackService';
-import { TeamsIntegrationService } from '../services/integrations/teamsService';
-import { GitHubIntegrationService } from '../services/integrations/githubService';
-import { JiraIntegrationService } from '../services/integrations/jiraService';
+import { SlackIntegrationService } from '../services/dev-tools/integrations/slackService';
+import { TeamsIntegrationService } from '../services/dev-tools/integrations/teamsService';
+import { GitHubIntegrationService } from '../services/dev-tools/integrations/githubService';
+import { JiraIntegrationService } from '../services/dev-tools/integrations/jiraService';
 
 export function createIntegrationsRouter(
   slackService: SlackIntegrationService,
   teamsService: TeamsIntegrationService,
   githubService: GitHubIntegrationService,
   jiraService: JiraIntegrationService
-) {
+): express.Router {
   const router = express.Router();
 
   // Slack Integration Routes
@@ -25,7 +25,7 @@ export function createIntegrationsRouter(
 
   router.get('/slack', async (req: Request, res: Response) => {
     try {
-      const integrations = slackService.getAllIntegrations();
+      const integrations = await slackService.getIntegration();
       return res.json(integrations);
     } catch (error) {
       console.error('Error fetching Slack integrations:', error);
@@ -114,7 +114,7 @@ export function createIntegrationsRouter(
 
   router.get('/teams', async (req: Request, res: Response) => {
     try {
-      const integrations = teamsService.getAllIntegrations();
+      const integrations = teamsService.getIntegration();
       return res.json(integrations);
     } catch (error) {
       console.error('Error fetching Teams integrations:', error);
@@ -212,7 +212,7 @@ export function createIntegrationsRouter(
 
   router.get('/github', async (req: Request, res: Response) => {
     try {
-      const integrations = githubService.getAllIntegrations();
+      const integrations = githubService.getIntegration();
       return res.json(integrations);
     } catch (error) {
       console.error('Error fetching GitHub integrations:', error);
@@ -271,7 +271,7 @@ export function createIntegrationsRouter(
 
   router.get('/jira', async (req: Request, res: Response) => {
     try {
-      const integrations = jiraService.getAllIntegrations();
+      const integrations = jiraService.getIntegration();
       return res.json(integrations);
     } catch (error) {
       console.error('Error fetching Jira integrations:', error);
@@ -322,20 +322,20 @@ export function createIntegrationsRouter(
     try {
       const status = {
         slack: {
-          total: slackService.getAllIntegrations().length,
-          active: slackService.getAllIntegrations().filter(i => i.isActive).length
+          total: slackService.getIntegration().length,
+          active: slackService.getIntegration().filter(i => i.is_active).length
         },
         teams: {
-          total: teamsService.getAllIntegrations().length,
-          active: teamsService.getAllIntegrations().filter(i => i.isActive).length
+          total: teamsService.getIntegration().length,
+          active: teamsService.getIntegration().filter(i => i.is_active).length
         },
         github: {
-          total: githubService.getAllIntegrations().length,
-          active: githubService.getAllIntegrations().filter(i => i.isActive).length
+          total: githubService.getIntegration().length,
+          active: githubService.getIntegration().filter(i => i.is_active).length
         },
         jira: {
-          total: jiraService.getAllIntegrations().length,
-          active: jiraService.getAllIntegrations().filter(i => i.isActive).length
+          total: jiraService.getIntegration().length,
+          active: jiraService.getIntegration().filter(i => i.is_active).length
         }
       };
       return res.json(status);
