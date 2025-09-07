@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: claude-coordination-config
+  namespace: claude-coordination
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  PORT: "8080"
+  POSTGRES_HOST: "postgres-primary-service"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "claude_coordination"
+  POSTGRES_USER: "postgres"
+  POSTGRES_SSL: "true"
+  POSTGRES_READ_HOST: "postgres-replica-service"
+  REDIS_HOST: "redis-cluster-service"
+  REDIS_PORT: "6379"
+  REDIS_CLUSTER_ENABLED: "true"
+  OTEL_SERVICE_NAME: "claude-coordination-server"
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger-collector.claude-coordination-monitoring:4318/v1/traces"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: claude-coordination
+data:
+  postgresql.conf: |
+    # PostgreSQL Configuration for Production
+    listen_addresses = '*'
+    port = 5432
+    max_connections = 200
+    shared_buffers = 1GB
+    effective_cache_size = 3GB
+    maintenance_work_mem = 256MB
+    checkpoint_completion_target = 0.9
+    wal_buffers = 16MB
+    default_statistics_target = 100
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    work_mem = 4MB
+    min_wal_size = 1GB
+    max_wal_size = 4GB
+    max_worker_processes = 8
+    max_parallel_workers_per_gather = 2
+    max_parallel_workers = 8
+    max_parallel_maintenance_workers = 2
+    
+    # Replication settings
+    wal_level = replica
+    max_wal_senders = 5
+    max_replication_slots = 5
+    hot_standby = on
+    
+    # Logging
+    log_destination = 'stderr'
+    logging_collector = on
+    log_directory = 'log'
+    log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+    log_min_messages = warning
+    log_min_error_statement = error
+    log_checkpoints = on
+    log_connections = on
+    log_disconnections = on
+    log_lock_waits = on
+    log_temp_files = 0
+    log_autovacuum_min_duration = 0
+    log_error_verbosity = default
+    
+  pg_hba.conf: |
+    # TYPE  DATABASE        USER            ADDRESS                 METHOD
+    local   all             postgres                                trust
+    host    all             postgres        127.0.0.1/32            trust
+    host    all             postgres        ::1/128                 trust
+    host    all             postgres        0.0.0.0/0               md5
+    host    replication     replicator      0.0.0.0/0               md5
+    
+  recovery.conf: |
+    standby_mode = 'on'
+    primary_conninfo = 'host=postgres-primary-service port=5432 user=replicator'
+    recovery_target_timeline = 'latest'

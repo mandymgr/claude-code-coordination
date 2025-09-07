@@ -1,0 +1,451 @@
+# Production Docker Compose for Claude Code Coordination
+# High-availability, scalable production deployment
+
+version: '3.8'
+
+services:
+  # Load Balancer
+  traefik:
+    image: traefik:v3.0
+    container_name: ccc-traefik
+    restart: unless-stopped
+    command:
+      - --api.dashboard=true
+      - --api.insecure=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --metrics.prometheus=true
+      - --log.level=INFO
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8081:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infra/letsencrypt:/letsencrypt
+    networks:
+      - ccc-network
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+
+  # PostgreSQL Primary
+  postgres-primary:
+    image: postgres:16-alpine
+    container_name: ccc-postgres-primary
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: claude_coordination
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_REPLICATION_USER: replicator
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
+    volumes:
+      - postgres_primary_data:/var/lib/postgresql/data
+      - ./infra/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./infra/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./packages/server/src/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d claude_coordination"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ccc-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+
+  # PostgreSQL Read Replica
+  postgres-replica:
+    image: postgres:16-alpine
+    container_name: ccc-postgres-replica
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: claude_coordination
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGUSER: postgres
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+      - ./infra/postgres/recovery.conf:/etc/postgresql/recovery.conf:ro
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    networks:
+      - ccc-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+
+  # Redis Cluster (3 nodes)
+  redis-node-1:
+    image: redis:7-alpine
+    container_name: ccc-redis-1
+    restart: unless-stopped
+    command: >
+      redis-server
+      --port 6379
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_1_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - ccc-network
+
+  redis-node-2:
+    image: redis:7-alpine
+    container_name: ccc-redis-2
+    restart: unless-stopped
+    command: >
+      redis-server
+      --port 6380
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_2_data:/data
+    ports:
+      - "6380:6380"
+    networks:
+      - ccc-network
+
+  redis-node-3:
+    image: redis:7-alpine
+    container_name: ccc-redis-3
+    restart: unless-stopped
+    command: >
+      redis-server
+      --port 6381
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_3_data:/data
+    ports:
+      - "6381:6381"
+    networks:
+      - ccc-network
+
+  # Application Server (3 replicas for HA)
+  server-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: ccc-server-1
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis-node-1:
+        condition: service_started
+    environment:
+      POSTGRES_HOST: postgres-primary
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: claude_coordination
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_SSL: true
+      POSTGRES_READ_HOST: postgres-replica
+      
+      REDIS_HOST: redis-node-1
+      REDIS_PORT: 6379
+      REDIS_CLUSTER_ENABLED: true
+      REDIS_CLUSTER_NODES: "redis-node-1:6379,redis-node-2:6380,redis-node-3:6381"
+      
+      NODE_ENV: production
+      PORT: 8080
+      LOG_LEVEL: info
+      
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      
+      JWT_SECRET: ${JWT_SECRET}
+      
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_SERVICE_NAME: claude-coordination-server-1
+      
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - ccc-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.server.rule=Host(`api.${DOMAIN}`)"
+      - "traefik.http.routers.server.tls.certresolver=letsencrypt"
+      - "traefik.http.services.server.loadbalancer.server.port=8080"
+      - "traefik.http.services.server.loadbalancer.healthcheck.path=/health"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+
+  server-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: ccc-server-2
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis-node-2:
+        condition: service_started
+    environment:
+      POSTGRES_HOST: postgres-primary
+      POSTGRES_READ_HOST: postgres-replica
+      REDIS_HOST: redis-node-2
+      REDIS_PORT: 6380
+      REDIS_CLUSTER_ENABLED: true
+      REDIS_CLUSTER_NODES: "redis-node-1:6379,redis-node-2:6380,redis-node-3:6381"
+      NODE_ENV: production
+      PORT: 8080
+      OTEL_SERVICE_NAME: claude-coordination-server-2
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - ccc-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.server.loadbalancer.server.port=8080"
+
+  server-3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: ccc-server-3
+    restart: unless-stopped
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis-node-3:
+        condition: service_started
+    environment:
+      POSTGRES_HOST: postgres-primary
+      POSTGRES_READ_HOST: postgres-replica
+      REDIS_HOST: redis-node-3
+      REDIS_PORT: 6381
+      REDIS_CLUSTER_ENABLED: true
+      REDIS_CLUSTER_NODES: "redis-node-1:6379,redis-node-2:6380,redis-node-3:6381"
+      NODE_ENV: production
+      PORT: 8080
+      OTEL_SERVICE_NAME: claude-coordination-server-3
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - ccc-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.server.loadbalancer.server.port=8080"
+
+  # Frontend (Production build)
+  frontend:
+    build:
+      context: ./src/dev
+      dockerfile: Dockerfile
+      target: production
+    container_name: ccc-frontend
+    restart: unless-stopped
+    depends_on:
+      - server-1
+    networks:
+      - ccc-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ccc-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    volumes:
+      - ./infra/monitoring/prometheus-prod.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - ccc-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`metrics.${DOMAIN}`)"
+      - "traefik.http.routers.prometheus.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.prometheus.middlewares=auth"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ccc-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_SERVER_ROOT_URL: https://grafana.${DOMAIN}
+      GF_SECURITY_COOKIE_SECURE: true
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infra/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - ccc-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN}`)"
+      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: ccc-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+      SPAN_STORAGE_TYPE: elasticsearch
+      ES_SERVER_URLS: http://elasticsearch:9200
+    networks:
+      - ccc-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jaeger.rule=Host(`tracing.${DOMAIN}`)"
+      - "traefik.http.routers.jaeger.tls.certresolver=letsencrypt"
+      - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
+
+  # Elasticsearch for Jaeger
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: ccc-elasticsearch
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      xpack.security.enabled: false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - ccc-network
+
+  # Log Aggregation
+  loki:
+    image: grafana/loki:latest
+    container_name: ccc-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./infra/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    networks:
+      - ccc-network
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: ccc-promtail
+    restart: unless-stopped
+    volumes:
+      - ./logs:/var/log/app:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./infra/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - ccc-network
+
+  # Backup Service
+  backup:
+    image: postgres:16-alpine
+    container_name: ccc-backup
+    restart: "no"
+    environment:
+      POSTGRES_HOST: postgres-primary
+      POSTGRES_DB: claude_coordination
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+      - ./infra/scripts/backup.sh:/backup.sh:ro
+    command: ["sh", "/backup.sh"]
+    networks:
+      - ccc-network
+    profiles:
+      - backup
+
+networks:
+  ccc-network:
+    driver: bridge
+    name: claude-coordination-prod
+  traefik-network:
+    external: true
+
+volumes:
+  postgres_primary_data:
+    driver: local
+    name: ccc-postgres-primary-data
+  postgres_replica_data:
+    driver: local
+    name: ccc-postgres-replica-data
+  redis_1_data:
+    driver: local
+    name: ccc-redis-1-data
+  redis_2_data:
+    driver: local
+    name: ccc-redis-2-data
+  redis_3_data:
+    driver: local
+    name: ccc-redis-3-data
+  prometheus_data:
+    driver: local
+    name: ccc-prometheus-data
+  grafana_data:
+    driver: local
+    name: ccc-grafana-data
+  elasticsearch_data:
+    driver: local
+    name: ccc-elasticsearch-data
+  loki_data:
+    driver: local
+    name: ccc-loki-data

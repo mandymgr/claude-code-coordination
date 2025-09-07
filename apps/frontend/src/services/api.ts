@@ -157,6 +157,23 @@ export class CoordinationAPI {
     return this.fetch<{ status: string; timestamp: string }>('/api/health');
   }
 
+  // KRIN Coordination API
+  async coordinateTask(task: string, context?: any, agents?: string[]): Promise<any> {
+    return this.fetch('/api/coordination/assign', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        task, 
+        context, 
+        agents: agents || ['claude', 'gpt4', 'gemini'],
+        autoFix: true
+      }),
+    });
+  }
+
+  async getCoordinationStatus(): Promise<any> {
+    return this.fetch('/api/coordination/status');
+  }
+
   // Generic HTTP methods for collaboration features
   async post<T>(endpoint: string, data?: any): Promise<T> {
     return this.fetch(endpoint, {
@@ -264,6 +281,46 @@ export const mockData = {
         'gemini-1': 28280,
       },
     },
+  },
+
+  coordinationStatus: {
+    system: 'operational',
+    agents: {
+      claude: { status: 'active', load: '12%' },
+      gpt4: { status: 'active', load: '8%' },
+      gemini: { status: 'active', load: '15%' }
+    },
+    qualityGates: {
+      typescript: 'active',
+      eslint: 'active', 
+      security: 'active',
+      performance: 'active'
+    },
+    version: '3.0.0',
+    uptime: 3600
+  },
+
+  coordinationResult: {
+    success: true,
+    assignedAgent: 'claude',
+    estimatedTime: '2-5 min',
+    reasoning: 'Claude selected for UI/UX and React development',
+    qualityPassed: true,
+    qualityResults: {
+      passed: true,
+      totalIssues: 0,
+      fixedIssues: 2,
+      executionTime: 2156,
+      checks: [
+        { name: 'TypeScript', passed: true, message: 'No TypeScript errors found', fixedIssues: 1 },
+        { name: 'ESLint', passed: true, message: 'All ESLint rules passed', fixedIssues: 1 },
+        { name: 'Security', passed: true, message: 'No security vulnerabilities detected', fixedIssues: 0 },
+        { name: 'Performance', passed: true, message: 'Performance checks passed', fixedIssues: 0 }
+      ]
+    },
+    diffText: 'diff --git a/src/component.tsx b/src/component.tsx...',
+    tokens: 187,
+    duration: 3241
   },
 };
 

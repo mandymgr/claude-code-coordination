@@ -387,7 +387,7 @@ class ClaudeCoordinationMCPServer {
   private async handleGetAgentStatus(args: any) {
     const { agent_id, include_metrics = true } = args;
     
-    const status = await this.agentPool.getStatus(agent_id, include_metrics);
+    const status = await this.agentPool.getStatus();
     
     let statusText = '🤖 **AI Agent Status Report**\\n\\n';
     

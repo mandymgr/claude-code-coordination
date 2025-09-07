@@ -16,6 +16,7 @@ dotenv.config();
 import { authRouter } from './routes/auth';
 import { analyticsRouter } from './routes/analytics';
 import { collaborationRouter, setRealtimeService } from './routes/collaboration';
+import { coordinationRouter } from './routes/coordination';
 import codegenRouter from './routes/codegen';
 import quantumRouter from './routes/quantum';
 import blockchainRouter from './routes/blockchain';
@@ -130,6 +131,12 @@ process_uptime_seconds ${process.uptime()}
 
     // Collaboration routes (protected)
     this.app.use('/api/collaboration', collaborationRouter);
+
+    // KRIN Coordination routes (protected)
+    this.app.use('/api/coordination', coordinationRouter);
+    
+    // Legacy task assignment (fallback for VS Code extension)
+    this.app.use('/api', coordinationRouter);
 
     // Code generation and refactoring routes (protected)
     this.app.use('/api/codegen', authenticate, codegenRouter);

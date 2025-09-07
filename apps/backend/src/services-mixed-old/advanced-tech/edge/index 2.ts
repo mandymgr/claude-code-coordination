@@ -1,0 +1,1 @@
+../../../services/edge/index.ts
