@@ -139,7 +139,14 @@ export class TeamOptimizationML {
     const scoredCandidates = await this.scoreCandidates(candidates, requirements, config);
     
     // Select optimal team
-    const optimalTeam = this.selectOptimalTeam(scoredCandidates, config);
+    const optimalTeam = this.selectOptimalTeam(scoredCandidates);
+    
+    // Handle case where no candidates were generated
+    if (!optimalTeam || !optimalTeam.members || optimalTeam.members.length === 0) {
+      console.log('🔧 No candidates generated, creating fallback team...');
+      const fallbackTeam = this.createFallbackTeam(availableMembers, requirements);
+      return this.createFallbackOptimizationResult(fallbackTeam, config);
+    }
     
     // Generate predictions and recommendations
     const predictions = await this.generatePredictions(optimalTeam, requirements);
@@ -564,8 +571,61 @@ export class TeamOptimizationML {
     };
   }
 
-  private selectOptimalTeam(scoredCandidates: Array<{ team: TeamComposition; score: number }>): TeamComposition {
-    return scoredCandidates[0]?.team || scoredCandidates[0]?.team;
+  private selectOptimalTeam(scoredCandidates: Array<{ team: TeamComposition; score: number }>): TeamComposition | null {
+    return scoredCandidates[0]?.team || null;
+  }
+
+  /**
+   * 🛟 Create fallback team when no candidates are generated
+   */
+  private createFallbackTeam(members: TeamMember[], requirements: ProjectRequirements): TeamComposition {
+    // Select best members based on requirements
+    const selectedMembers = members
+      .filter(m => m.availability > 0.3)
+      .sort((a, b) => b.performance.averageRating - a.performance.averageRating)
+      .slice(0, Math.min(requirements.constraints.maxTeamSize, 4));
+
+    return this.createTeamComposition(selectedMembers, requirements);
+  }
+
+  /**
+   * 🔄 Create fallback optimization result
+   */
+  private createFallbackOptimizationResult(team: TeamComposition, config: OptimizationConfig) {
+    return {
+      strategy: config.strategy,
+      composition: team,
+      rationale: [
+        'Fallback team composition generated',
+        `Selected ${team.members.length} best available members`,
+        'Consider reviewing member availability and project requirements'
+      ],
+      predictions: {
+        estimatedSuccess: 0.7,
+        timeToCompletion: 60,
+        budgetRequirement: 80000,
+        riskFactors: [],
+        keyMilestones: [],
+        potentialBottlenecks: ['Limited team optimization due to constraints']
+      },
+      recommendations: [{
+        type: 'team-composition' as const,
+        priority: 'medium' as const,
+        description: 'Review project requirements and member availability',
+        rationale: 'Fallback team generated due to optimization constraints',
+        implementation: ['Review member skills', 'Adjust project scope', 'Consider additional resources'],
+        expectedBenefit: 'Improved team optimization',
+        effort: 'medium' as const
+      }],
+      warnings: [{
+        type: 'skill-mismatch' as const,
+        severity: 'warning' as const,
+        message: 'Using fallback team composition - optimization may not be optimal',
+        suggestedActions: ['Review project requirements', 'Check member availability', 'Consider skill gaps']
+      }],
+      confidence: 0.6,
+      timestamp: Date.now()
+    };
   }
 
   private generateRationale(team: TeamComposition, config: OptimizationConfig): string[] {
@@ -585,7 +645,8 @@ export class TeamOptimizationML {
       1 - team.metrics.riskScore
     ];
     
-    return factors.reduce((sum, factor) => sum + factor, 0) / factors.length;
+    const average = factors.reduce((sum, factor) => sum + factor, 0) / factors.length;
+    return Math.min(0.98, Math.max(0.1, average)); // Cap at 98% confidence
   }
 
   // Additional helper methods would be implemented here...

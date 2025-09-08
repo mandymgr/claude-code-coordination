@@ -11,5 +11,9 @@
   },
   "totalSize": 976,
   "created": 1757152489444,
-  "lastCleanup": 1757152489444
+  "lastCleanup": 1757152489444,
+  "version": "3.0.0",
+  "hitCount": 0,
+  "missCount": 0,
+  "similarityHits": 0
 }

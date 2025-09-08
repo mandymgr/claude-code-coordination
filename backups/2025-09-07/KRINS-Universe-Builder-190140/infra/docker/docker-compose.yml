@@ -1,0 +1,244 @@
+# Docker Compose for Claude Code Coordination
+# Development, testing, and local production setup
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ccc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: claude_coordination
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password_change_in_production}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./packages/server/src/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./packages/server/src/database/migrations:/docker-entrypoint-initdb.d/migrations:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d claude_coordination"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ccc-network
+
+  # Redis Cache & Queue
+  redis:
+    image: redis:7-alpine
+    container_name: ccc-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --notify-keyspace-events Ex
+    volumes:
+      - redis_data:/data
+      - ./infra/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ccc-network
+
+  # Main Application Server
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${BUILD_TARGET:-development}
+    container_name: ccc-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: claude_coordination
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password_change_in_production}
+      POSTGRES_SSL: false
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      
+      # Application
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 8080
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      
+      # AI Services (set in .env)
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      
+      # Security
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_in_production}
+      
+      # Observability
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://jaeger:14268/api/traces}
+      OTEL_SERVICE_NAME: claude-coordination-server
+      
+    volumes:
+      # Development hot reload (only in dev mode)
+      - type: bind
+        source: ./packages/server/src
+        target: /app/packages/server/src
+        consistency: cached
+        bind:
+          propagation: rprivate
+      # Logs
+      - ./logs:/app/logs
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - ccc-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Frontend Development Server (optional)
+  frontend:
+    build:
+      context: ./src/dev
+      dockerfile: Dockerfile
+    container_name: ccc-frontend
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      VITE_API_URL: http://server:8080
+      VITE_WS_URL: ws://server:8080
+    volumes:
+      - ./src/dev:/app:cached
+      - /app/node_modules
+    ports:
+      - "${FRONTEND_PORT:-3000}:5173"
+    networks:
+      - ccc-network
+    profiles:
+      - frontend
+
+  # NGINX Reverse Proxy (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: ccc-nginx
+    restart: unless-stopped
+    depends_on:
+      - server
+    volumes:
+      - ./infra/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/ssl:/etc/nginx/ssl:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - ccc-network
+    profiles:
+      - production
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ccc-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - ccc-network
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ccc-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infra/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3001:3000"
+    networks:
+      - ccc-network
+    profiles:
+      - monitoring
+
+  # Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: ccc-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # Accept jaeger.thrift from jaeger-agent
+      - "4317:4317"    # OTLP gRPC receiver
+      - "4318:4318"    # OTLP HTTP receiver
+    networks:
+      - ccc-network
+    profiles:
+      - monitoring
+
+# Network configuration
+networks:
+  ccc-network:
+    driver: bridge
+    name: claude-coordination
+
+# Volume configuration
+volumes:
+  postgres_data:
+    driver: local
+    name: ccc-postgres-data
+  redis_data:
+    driver: local
+    name: ccc-redis-data
+  prometheus_data:
+    driver: local
+    name: ccc-prometheus-data
+  grafana_data:
+    driver: local
+    name: ccc-grafana-data

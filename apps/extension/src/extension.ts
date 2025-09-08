@@ -5,6 +5,7 @@ import { exec, execSync } from 'child_process';
 import { CoordinationStatusProvider } from './statusProvider';
 import { CoordinationDecorationProvider } from './decorationProvider';
 import { WebDashboardPanel } from './webDashboard';
+import { DashboardIntegration, DashboardUtils } from './dashboardIntegration';
 import { DiffPreviewProvider } from './diffPreviewProvider';
 import { QualityGateProvider } from './qualityGateProvider';
 import { 
@@ -43,13 +44,26 @@ export interface CoordinationStatus {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('🚀 Claude Code Coordination extension is now active!');
+  console.log('🚀 KRINS AI Coordination extension is now active!');
+
+  // Initialize dashboard integration
+  const config = vscode.workspace.getConfiguration('claude-coordination');
+  const dashboardIntegration = DashboardIntegration.getInstance({
+    serverPort: config.get<number>('webDashboardPort') || 3000,
+    autoStart: true,
+    enableRealTimeUpdates: true,
+    updateInterval: 5000,
+    serverTimeout: 10000
+  });
 
   // Initialize providers
   const statusProvider = new CoordinationStatusProvider();
   const decorationProvider = new CoordinationDecorationProvider();
   const diffPreviewProvider = new DiffPreviewProvider(context.extensionUri);
   const qualityGateProvider = new QualityGateProvider(context.extensionUri, context);
+  
+  // Create dashboard status bar item
+  const dashboardStatusItem = DashboardUtils.createServerStatusItem(context);
   
   // Register tree view
   vscode.window.createTreeView('claude-coordination-status', { 
@@ -70,9 +84,17 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // Auto-start coordination session if enabled
-  const config = vscode.workspace.getConfiguration('claude-coordination');
   if (config.get('autoStartSession') && vscode.workspace.workspaceFolders) {
     startCoordinationSession();
+    
+    // Auto-start dashboard server
+    setTimeout(async () => {
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+      if (workspaceFolder) {
+        await dashboardIntegration.startServer(workspaceFolder);
+        dashboardIntegration.startHealthMonitoring(context);
+      }
+    }, 2000); // Delay to allow workspace to fully initialize
   }
 
   // Register commands
@@ -125,6 +147,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push({
     dispose: () => clearInterval(statusInterval)
+  });
+
+  // Clean up dashboard integration on extension deactivation
+  context.subscriptions.push({
+    dispose: () => dashboardIntegration.dispose()
   });
 }
 
@@ -277,7 +304,9 @@ async function aiAssist() {
 
 async function openWebDashboard() {
   try {
-    WebDashboardPanel.createOrShow();
+    const context = vscode.extensions.getExtension('krins-dev.claude-coordination-extension');
+    const extensionPath = context?.extensionPath || '';
+    WebDashboardPanel.createOrShow(extensionPath);
   } catch (error) {
     vscode.window.showErrorMessage(`Failed to open web dashboard: ${error}`);
   }

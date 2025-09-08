@@ -1,12 +1,37 @@
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
+import { exec, spawn, ChildProcess } from 'child_process';
+import * as path from 'path';
 import { CoordinationStatus } from './extension';
+
+interface DashboardServerConfig {
+  port: number;
+  serverUrl?: string;
+  autoStart: boolean;
+}
+
+interface ServerStats {
+  sessions: number;
+  activeLocks: number;
+  healthyConnections: number;
+  uptime: string;
+}
+
+interface SessionHealth {
+  status: 'healthy' | 'warning' | 'critical';
+  score: number;
+  issues: string[];
+  lastActivity: number;
+}
 
 export class WebDashboardPanel {
   public static currentPanel: WebDashboardPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionPath: string;
   private _disposables: vscode.Disposable[] = [];
+  private _dashboardServer: ChildProcess | undefined;
+  private _serverConfig: DashboardServerConfig;
+  private _eventSource: any;
+  private _isServerRunning = false;
 
   public static createOrShow(extensionPath?: string) {
     const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
@@ -18,11 +43,12 @@ export class WebDashboardPanel {
 
     const panel = vscode.window.createWebviewPanel(
       'claudeCoordinationDashboard',
-      'Claude Code Coordination Dashboard',
+      'KRINS AI Coordination Dashboard',
       column || vscode.ViewColumn.One,
       {
         enableScripts: true,
-        retainContextWhenHidden: true
+        retainContextWhenHidden: true,
+        enableCommandUris: true
       }
     );
 
@@ -32,8 +58,16 @@ export class WebDashboardPanel {
   private constructor(panel: vscode.WebviewPanel, extensionPath: string) {
     this._panel = panel;
     this._extensionPath = extensionPath;
+    
+    // Initialize server configuration
+    const config = vscode.workspace.getConfiguration('claude-coordination');
+    this._serverConfig = {
+      port: config.get<number>('webDashboardPort') || 3000,
+      serverUrl: config.get<string>('serverUrl') || 'http://localhost:8080',
+      autoStart: true
+    };
 
-    this._update();
+    this._init();
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
     this._panel.webview.onDidReceiveMessage(
@@ -51,24 +85,45 @@ export class WebDashboardPanel {
           case 'aiAssist':
             vscode.commands.executeCommand('claude-coordination.aiAssist');
             return;
+          case 'startServer':
+            this._startDashboardServer();
+            return;
+          case 'stopServer':
+            this._stopDashboardServer();
+            return;
+          case 'openExternal':
+            vscode.env.openExternal(vscode.Uri.parse(`http://localhost:${this._serverConfig.port}`));
+            return;
+          case 'runCleanup':
+            this._runCleanup();
+            return;
+          case 'assignTask':
+            vscode.commands.executeCommand('claude-coordination.assignTask');
+            return;
+          case 'runQualityGates':
+            vscode.commands.executeCommand('claude-coordination.runQualityGates');
+            return;
+          case 'deploy':
+            vscode.commands.executeCommand('claude-coordination.deploy');
+            return;
         }
       },
       null,
       this._disposables
     );
-
-    // Auto-refresh every 10 seconds
-    const refreshInterval = setInterval(() => {
-      this._update();
-    }, 10000);
-
-    this._disposables.push({
-      dispose: () => clearInterval(refreshInterval)
-    });
   }
 
   public dispose() {
     WebDashboardPanel.currentPanel = undefined;
+    
+    // Close event source
+    if (this._eventSource) {
+      this._eventSource.close();
+    }
+    
+    // Stop dashboard server
+    this._stopDashboardServer();
+    
     this._panel.dispose();
 
     while (this._disposables.length) {
@@ -79,10 +134,29 @@ export class WebDashboardPanel {
     }
   }
 
+  private async _init() {
+    // Start with loading screen
+    this._panel.webview.html = this.getLoadingContent();
+    
+    // Start dashboard server if configured
+    if (this._serverConfig.autoStart) {
+      await this._startDashboardServer();
+    }
+    
+    // Initial update
+    await this._update();
+    
+    // Setup real-time updates if server is running
+    if (this._isServerRunning) {
+      this._setupRealTimeUpdates();
+    }
+  }
+
   private async _update() {
     try {
       const status = await this.getCoordinationStatus();
-      this._panel.webview.html = this.getWebviewContent(status);
+      const serverStats = await this.getServerStats();
+      this._panel.webview.html = this.getWebviewContent(status, serverStats);
     } catch (error) {
       this._panel.webview.html = this.getErrorContent(error as string);
     }
@@ -119,7 +193,174 @@ export class WebDashboardPanel {
     });
   }
 
-  private getWebviewContent(status: CoordinationStatus): string {
+  private async _startDashboardServer(): Promise<void> {
+    try {
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+      if (!workspaceFolder) {
+        throw new Error('No workspace folder open');
+      }
+
+      // Check if ai-core package exists
+      const aiCorePath = path.join(workspaceFolder.uri.fsPath, 'packages', 'ai-core');
+      const dashboardServerPath = path.join(aiCorePath, 'src', 'dashboard-server.cjs');
+      
+      if (!require('fs').existsSync(dashboardServerPath)) {
+        vscode.window.showWarningMessage('Dashboard server not found. Run: npm run dashboard');
+        return;
+      }
+
+      // Kill any existing server
+      await this._stopDashboardServer();
+
+      // Start new server
+      this._dashboardServer = spawn('node', [dashboardServerPath, `--port=${this._serverConfig.port}`], {
+        cwd: aiCorePath,
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+
+      this._dashboardServer.stdout?.on('data', (data) => {
+        console.log(`Dashboard server: ${data}`);
+      });
+
+      this._dashboardServer.stderr?.on('data', (data) => {
+        console.error(`Dashboard server error: ${data}`);
+      });
+
+      this._dashboardServer.on('close', (code) => {
+        this._isServerRunning = false;
+        console.log(`Dashboard server exited with code ${code}`);
+      });
+
+      // Wait a bit for server to start
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      this._isServerRunning = true;
+      
+      vscode.window.showInformationMessage(`Dashboard server started on port ${this._serverConfig.port}`);
+      
+    } catch (error) {
+      console.error('Failed to start dashboard server:', error);
+      vscode.window.showErrorMessage(`Failed to start dashboard server: ${error}`);
+    }
+  }
+
+  private async _stopDashboardServer(): Promise<void> {
+    if (this._dashboardServer) {
+      this._dashboardServer.kill();
+      this._dashboardServer = undefined;
+      this._isServerRunning = false;
+    }
+  }
+
+  private _setupRealTimeUpdates(): void {
+    // This would require implementing Server-Sent Events in a Node.js context
+    // For now, we'll use polling with shorter intervals when server is running
+    const updateInterval = setInterval(() => {
+      if (this._isServerRunning && this._panel.visible) {
+        this._update();
+      }
+    }, 5000);
+
+    this._disposables.push({
+      dispose: () => clearInterval(updateInterval)
+    });
+  }
+
+  private async _runCleanup(): Promise<void> {
+    try {
+      const result = await fetch(`http://localhost:${this._serverConfig.port}/api/cleanup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const data = await result.json();
+      
+      if (data.success) {
+        vscode.window.showInformationMessage(data.message);
+        this._update(); // Refresh the view
+      } else {
+        vscode.window.showErrorMessage(`Cleanup failed: ${data.message}`);
+      }
+    } catch (error) {
+      vscode.window.showErrorMessage(`Cleanup failed: ${error}`);
+    }
+  }
+
+  private async getServerStats(): Promise<ServerStats | null> {
+    if (!this._isServerRunning) {
+      return null;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:${this._serverConfig.port}/api/system`);
+      const data = await response.json();
+      
+      return {
+        sessions: Object.keys(data.sessions || {}).length,
+        activeLocks: Object.keys(data.locks || {}).length,
+        healthyConnections: Object.values(data.sessions || {}).filter((s: any) => s.health?.status === 'healthy').length,
+        uptime: this._formatUptime(data.lastUpdated)
+      };
+    } catch (error) {
+      return null;
+    }
+  }
+
+  private _formatUptime(timestamp: number): string {
+    const uptimeMs = Date.now() - timestamp;
+    const uptimeSeconds = Math.floor(uptimeMs / 1000);
+    const hours = Math.floor(uptimeSeconds / 3600);
+    const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  }
+
+  private getLoadingContent(): string {
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRINS AI Coordination Dashboard - Loading</title>
+    <style>
+        body {
+            font-family: var(--vscode-font-family);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-editor-background);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .loading-container {
+            text-align: center;
+        }
+        .spinner {
+            border: 4px solid var(--vscode-panel-border);
+            border-top: 4px solid var(--vscode-textLink-foreground);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <h2>🚀 Initializing KRINS AI Coordination Dashboard</h2>
+        <p>Starting dashboard server and loading coordination data...</p>
+    </div>
+</body>
+</html>`;
+  }
+
+  private getWebviewContent(status: CoordinationStatus, serverStats?: ServerStats | null): string {
     return `
 <!DOCTYPE html>
 <html lang="en">
@@ -144,10 +385,62 @@ export class WebDashboardPanel {
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 1px solid var(--vscode-panel-border);
+            flex-wrap: wrap;
+            gap: 15px;
         }
         .header h1 {
             margin: 0;
             color: var(--vscode-textLink-foreground);
+            flex-grow: 1;
+        }
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            border: 1px solid var(--vscode-panel-border);
+        }
+        .server-status.running {
+            background: var(--vscode-testing-iconPassed);
+            color: var(--vscode-editor-background);
+            border-color: var(--vscode-testing-iconPassed);
+        }
+        .server-status.stopped {
+            background: var(--vscode-testing-iconFailed);
+            color: var(--vscode-editor-background);
+            border-color: var(--vscode-testing-iconFailed);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .control-btn {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        .control-btn:hover {
+            background: var(--vscode-button-hoverBackground);
         }
         .refresh-btn {
             background: var(--vscode-button-background);
@@ -224,10 +517,40 @@ export class WebDashboardPanel {
             margin-top: 8px;
         }
         .actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .action-section {
+            background: var(--vscode-editor-inactiveSelectionBackground);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 6px;
+            padding: 16px;
+        }
+        .action-section h3 {
+            margin: 0 0 12px 0;
+            color: var(--vscode-textLink-foreground);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .action-section .action-btn {
+            width: 100%;
+            margin-bottom: 6px;
+        }
+        .action-section .action-btn:last-child {
+            margin-bottom: 0;
+        }
+        .server-stat {
+            border-left: 3px solid var(--vscode-textLink-foreground);
+        }
+        .action-btn.cleanup {
+            background: var(--vscode-testing-iconFailed);
+            color: var(--vscode-editor-background);
+        }
+        .action-btn.cleanup:hover {
+            background: var(--vscode-errorForeground);
         }
         .action-btn {
             background: var(--vscode-button-background);
@@ -267,8 +590,21 @@ export class WebDashboardPanel {
 </head>
 <body>
     <div class="header">
-        <h1>🔄 Claude Code Coordination Dashboard</h1>
-        <button class="refresh-btn" onclick="refresh()">🔄 Refresh</button>
+        <h1>🚀 KRINS AI Coordination Dashboard</h1>
+        <div class="header-controls">
+            <div class="server-status ${this._isServerRunning ? 'running' : 'stopped'}">
+                <span class="status-dot"></span>
+                ${this._isServerRunning ? `Server Running (Port ${this._serverConfig.port})` : 'Server Stopped'}
+            </div>
+            <div class="header-buttons">
+                ${!this._isServerRunning ? 
+                    '<button class="control-btn" onclick="startServer()">🚀 Start Server</button>' :
+                    '<button class="control-btn" onclick="stopServer()">⏹️ Stop Server</button>'
+                }
+                <button class="control-btn" onclick="openExternal()">🌐 Open Web</button>
+                <button class="refresh-btn" onclick="refresh()">🔄 Refresh</button>
+            </div>
+        </div>
     </div>
 
     <div class="stats-grid">
@@ -288,6 +624,16 @@ export class WebDashboardPanel {
             <div class="stat-number">${status.currentSession}</div>
             <div class="stat-label">Current Session</div>
         </div>
+        ${serverStats ? `
+        <div class="stat-card server-stat">
+            <div class="stat-number">${serverStats.healthyConnections}</div>
+            <div class="stat-label">Healthy Connections</div>
+        </div>
+        <div class="stat-card server-stat">
+            <div class="stat-number">${serverStats.uptime}</div>
+            <div class="stat-label">Server Uptime</div>
+        </div>
+        ` : ''}
     </div>
 
     ${status.sessions.length > 0 ? `
@@ -351,10 +697,27 @@ export class WebDashboardPanel {
     ` : '<div class="section"><div class="empty-state">No recent messages</div></div>'}
 
     <div class="actions">
-        <button class="action-btn" onclick="lockFile()">🔒 Lock Current File</button>
-        <button class="action-btn" onclick="sendMessage()">💬 Send Message</button>
-        <button class="action-btn" onclick="aiAssist()">🤖 AI Assistant</button>
-        <button class="action-btn" onclick="refresh()">🔄 Refresh Status</button>
+        <div class="action-section">
+            <h3>🔧 File Operations</h3>
+            <button class="action-btn" onclick="lockFile()">🔒 Lock Current File</button>
+            <button class="action-btn" onclick="assignTask()">🤖 Assign AI Task</button>
+            <button class="action-btn" onclick="runQualityGates()">🛡️ Quality Gates</button>
+        </div>
+        <div class="action-section">
+            <h3>💬 Communication</h3>
+            <button class="action-btn" onclick="sendMessage()">💬 Send Message</button>
+            <button class="action-btn" onclick="aiAssist()">🧠 AI Assistant</button>
+        </div>
+        <div class="action-section">
+            <h3>🚀 Deployment</h3>
+            <button class="action-btn" onclick="deploy()">🚀 Deploy Project</button>
+            ${this._isServerRunning ? '<button class="action-btn cleanup" onclick="runCleanup()">🧹 Run Cleanup</button>' : ''}
+        </div>
+        <div class="action-section">
+            <h3>📊 Monitoring</h3>
+            <button class="action-btn" onclick="refresh()">🔄 Refresh Status</button>
+            ${this._isServerRunning ? '<button class="action-btn" onclick="openExternal()">🌐 Open Web Dashboard</button>' : ''}
+        </div>
     </div>
 
     <script>
@@ -374,6 +737,36 @@ export class WebDashboardPanel {
         
         function aiAssist() {
             vscode.postMessage({ command: 'aiAssist' });
+        }
+        
+        function startServer() {
+            vscode.postMessage({ command: 'startServer' });
+        }
+        
+        function stopServer() {
+            vscode.postMessage({ command: 'stopServer' });
+        }
+        
+        function openExternal() {
+            vscode.postMessage({ command: 'openExternal' });
+        }
+        
+        function runCleanup() {
+            if (confirm('This will clean up zombie sessions and orphaned locks. Continue?')) {
+                vscode.postMessage({ command: 'runCleanup' });
+            }
+        }
+        
+        function assignTask() {
+            vscode.postMessage({ command: 'assignTask' });
+        }
+        
+        function runQualityGates() {
+            vscode.postMessage({ command: 'runQualityGates' });
+        }
+        
+        function deploy() {
+            vscode.postMessage({ command: 'deploy' });
         }
         
         // Auto-refresh indicator

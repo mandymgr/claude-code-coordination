@@ -187,14 +187,28 @@ export class EnhancedMagicCLI {
 
       'deploy': {
         description: '🚀 Deploy project with intelligent automation',
-        usage: 'krins deploy [target] [--env]',
-        options: ['--env=dev', '--env=staging', '--env=prod', '--dry-run'],
-        subcommands: ['vercel', 'netlify', 'docker', 'auto'],
+        usage: 'krins deploy [target] [--env] [--dry-run]',
+        options: ['--env=dev', '--env=staging', '--env=prod', '--dry-run', '--skip-tests', '--skip-build', '--verbose'],
+        subcommands: ['vercel', 'netlify', 'railway', 'render', 'github-pages', 'auto'],
         action: this.deployProject.bind(this),
         examples: [
           'krins deploy auto',
           'krins deploy vercel --env=prod',
-          'krins deploy docker --dry-run'
+          'krins deploy netlify --dry-run --skip-build',
+          'krins deploy railway dev --verbose'
+        ]
+      },
+
+      'optimize-team': {
+        description: '🤖 AI-powered team optimization with ML intelligence',
+        usage: 'krins optimize-team [project-path] [strategy]',
+        options: ['--strategy=balanced', '--strategy=experience-based', '--strategy=skill-based', '--json'],
+        subcommands: ['balanced', 'experience-based', 'skill-based', 'cost-optimized', 'time-optimized'],
+        action: this.optimizeTeam.bind(this),
+        examples: [
+          'krins optimize-team',
+          'krins optimize-team . balanced',
+          'krins optimize-team ./backend skill-based --json'
         ]
       }
     };
@@ -619,9 +633,255 @@ export class EnhancedMagicCLI {
     console.log('Build completed successfully!');
   }
 
+  /**
+   * 🚀 Magic deployment with intelligent platform selection
+   */
   private async deployProject(params: string[]): Promise<void> {
-    console.log(chalk.green('🚀 Deploying project...'));
-    console.log('Deployment completed successfully!');
+    console.log(chalk.blue('🚀 Starting Magic Deployment Engine...'));
+    
+    try {
+      const { MagicDeploymentEngine } = await import('./magic-deployment-engine.js');
+      
+      // Parse parameters
+      const target = params.find(p => ['vercel', 'netlify', 'railway', 'render', 'heroku', 'github-pages', 'auto'].includes(p)) as any;
+      const environment = params.find(p => ['dev', 'staging', 'prod'].includes(p)) as any || 'prod';
+      const isDryRun = params.includes('--dry-run') || params.includes('dry-run');
+      const isVerbose = params.includes('--verbose');
+      const skipTests = params.includes('--skip-tests');
+      const skipBuild = params.includes('--skip-build');
+      const isJson = params.includes('--json');
+      const projectPath = params.find(p => !p.startsWith('--') && !['vercel', 'netlify', 'railway', 'render', 'heroku', 'github-pages', 'auto', 'dev', 'staging', 'prod', 'dry-run'].includes(p)) || process.cwd();
+
+      console.log(`   📊 Project: ${chalk.cyan(projectPath)}`);
+      console.log(`   🎯 Target: ${chalk.yellow(target || 'auto (intelligent selection)')}`);
+      console.log(`   🌍 Environment: ${chalk.magenta(environment)}`);
+      if (isDryRun) console.log(`   🧪 ${chalk.gray('Dry run mode - no actual deployment')}`);
+
+      const engine = new MagicDeploymentEngine(projectPath);
+
+      // Get recommendation first if target is auto or not specified
+      if (!target || target === 'auto') {
+        console.log(chalk.cyan('\n🔍 Analyzing project for optimal deployment target...'));
+        const recommendation = await engine.getDeploymentRecommendation({ environment });
+        
+        if (isJson) {
+          console.log(JSON.stringify(recommendation, null, 2));
+          return;
+        }
+
+        console.log(chalk.green.bold('\n🎯 DEPLOYMENT RECOMMENDATION'));
+        console.log(chalk.gray('='.repeat(50)));
+        
+        console.log(chalk.white.bold(`\n🥇 Primary: ${recommendation.primary.target.toUpperCase()}`));
+        console.log(chalk.blue(`   Score: ${Math.round(recommendation.primary.score * 100)}%`));
+        console.log(chalk.green(`   Estimated Cost: $${recommendation.primary.estimatedCost}/month`));
+        console.log(chalk.yellow(`   Deploy Time: ~${Math.round(recommendation.primary.deploymentTime / 60)}min`));
+        
+        console.log(chalk.cyan('\n✅ Pros:'));
+        recommendation.primary.pros.forEach(pro => {
+          console.log(`   • ${pro}`);
+        });
+        
+        if (recommendation.primary.cons.length > 0) {
+          console.log(chalk.red('\n❌ Cons:'));
+          recommendation.primary.cons.forEach(con => {
+            console.log(`   • ${con}`);
+          });
+        }
+
+        if (recommendation.alternatives.length > 0) {
+          console.log(chalk.white.bold('\n🥈 Alternatives:'));
+          recommendation.alternatives.slice(0, 2).forEach((alt, index) => {
+            console.log(`   ${index + 2}. ${alt.target} (${Math.round(alt.score * 100)}% match, $${alt.estimatedCost}/mo)`);
+          });
+        }
+
+        console.log(chalk.blue.bold('\n🧠 AI Reasoning:'));
+        recommendation.reasoning.forEach((reason, index) => {
+          console.log(`   ${index + 1}. ${reason}`);
+        });
+
+        console.log(chalk.gray(`\n🎯 Confidence: ${Math.round(recommendation.confidence * 100)}%`));
+      }
+
+      // Perform deployment
+      const deployOptions = {
+        target,
+        environment,
+        dryRun: isDryRun,
+        verbose: isVerbose,
+        skipTests,
+        skipBuild
+      };
+
+      console.log(chalk.blue.bold('\n🚀 DEPLOYMENT EXECUTION'));
+      console.log(chalk.gray('='.repeat(40)));
+
+      const result = await engine.deploy(deployOptions);
+
+      if (isJson) {
+        console.log(JSON.stringify(result, null, 2));
+        return;
+      }
+
+      if (result.success) {
+        console.log(chalk.green.bold('\n🎉 DEPLOYMENT SUCCESSFUL!'));
+        console.log(chalk.gray('='.repeat(35)));
+        
+        if (result.url) {
+          console.log(chalk.white.bold(`\n🌐 Live URL: ${chalk.cyan(result.url)}`));
+        }
+        
+        console.log(chalk.blue(`\n📊 Deployment Stats:`));
+        console.log(`   Target: ${chalk.cyan(result.target)}`);
+        console.log(`   Environment: ${chalk.yellow(result.environment)}`);
+        console.log(`   Build Time: ${chalk.green(Math.round(result.buildTime / 1000))}s`);
+        console.log(`   Deploy Time: ${chalk.green(Math.round(result.deployTime / 1000))}s`);
+        console.log(`   Total Time: ${chalk.green(Math.round(result.totalTime / 1000))}s`);
+
+        if (result.metrics.bundleSize > 0) {
+          console.log(`\n📦 Build Metrics:`);
+          console.log(`   Bundle Size: ${chalk.cyan(Math.round(result.metrics.bundleSize / 1024))}KB`);
+          console.log(`   Dependencies: ${chalk.cyan(result.metrics.dependencies)}`);
+          
+          console.log(`\n🚀 Performance:`);
+          console.log(`   Lighthouse Score: ${chalk.green(result.metrics.lighthouse.performance)}/100`);
+          console.log(`   Load Time: ${chalk.cyan(result.metrics.loadTime)}ms`);
+          console.log(`   First Paint: ${chalk.cyan(result.metrics.firstContentfulPaint)}ms`);
+        }
+
+        if (result.warnings.length > 0) {
+          console.log(chalk.yellow.bold('\n⚠️  WARNINGS:'));
+          result.warnings.forEach((warning, index) => {
+            const severityEmoji = warning.severity === 'high' ? '🔴' : warning.severity === 'medium' ? '🟡' : '🔵';
+            console.log(`   ${severityEmoji} ${warning.message}`);
+            console.log(chalk.gray(`     💡 ${warning.suggestion}`));
+          });
+        }
+
+        console.log(chalk.green.bold('\n✅ Deployment completed successfully!'));
+
+        if (!isDryRun && result.url) {
+          console.log(chalk.blue(`\n🌐 Your application is live at:`));
+          console.log(chalk.cyan.bold(`   ${result.url}`));
+        }
+
+      } else {
+        console.log(chalk.red.bold('\n❌ DEPLOYMENT FAILED'));
+        console.log(chalk.gray('='.repeat(30)));
+        
+        if (result.errors.length > 0) {
+          console.log(chalk.red('\n🚨 Errors:'));
+          result.errors.forEach((error, index) => {
+            console.log(`   ${index + 1}. ${error.message}`);
+            
+            if (error.resolution.length > 0) {
+              console.log(chalk.blue('      💡 Suggested solutions:'));
+              error.resolution.forEach(solution => {
+                console.log(`         • ${solution}`);
+              });
+            }
+          });
+        }
+
+        console.log(chalk.blue('\n💡 Try:'));
+        console.log('   • krins deploy --dry-run (test deployment)');
+        console.log('   • krins deploy auto --verbose (detailed logs)');
+        console.log('   • krins deploy --skip-tests (skip testing)');
+      }
+
+    } catch (error) {
+      console.error(chalk.red('❌ Deployment engine error:'), error);
+      console.log(chalk.blue('\n💡 Available commands:'));
+      console.log('   krins deploy auto                    # Intelligent target selection');
+      console.log('   krins deploy vercel --env=prod      # Deploy to Vercel production');
+      console.log('   krins deploy netlify --dry-run      # Test Netlify deployment');
+      console.log('   krins deploy railway --skip-tests   # Skip tests and deploy to Railway');
+      console.log('   krins deploy github-pages           # Deploy to GitHub Pages');
+    }
+  }
+
+  /**
+   * 🤖 AI-powered team optimization with ML intelligence
+   */
+  private async optimizeTeam(params: string[]): Promise<void> {
+    console.log(chalk.blue('🤖 Optimizing AI team composition with ML intelligence...'));
+    
+    try {
+      const { TeamOptimizationEngine } = await import('./team-optimization-engine.js');
+      
+      const projectPath = params.find(p => !p.startsWith('--')) || process.cwd();
+      const strategy = params.find(p => ['balanced', 'experience-based', 'skill-based', 'cost-optimized', 'time-optimized', 'innovation-focused', 'risk-minimized', 'collaboration-optimized'].includes(p)) || 'balanced';
+      const isJson = params.includes('--json');
+      
+      console.log(`   📊 Analyzing project: ${chalk.cyan(projectPath)}`);
+      console.log(`   🎯 Using strategy: ${chalk.yellow(strategy)}`);
+      
+      const optimizer = new TeamOptimizationEngine(projectPath);
+      const result = await optimizer.optimizeForCLI(projectPath, strategy as any);
+      
+      if (result.success) {
+        if (isJson) {
+          console.log(JSON.stringify(result, null, 2));
+          return;
+        }
+
+        console.log(chalk.green.bold('\n🏆 OPTIMAL TEAM COMPOSITION'));
+        console.log(chalk.gray('='.repeat(60)));
+        
+        result.team.members.forEach((member: any, index: number) => {
+          const emoji = index === 0 ? '👑' : index === 1 ? '⭐' : '👨‍💻';
+          console.log(chalk.white.bold(`\n${emoji} ${index + 1}. ${member.name}`));
+          console.log(chalk.blue(`     Role: ${member.role}`));
+          console.log(chalk.cyan(`     Skills: ${member.skills.join(', ')}`));
+          console.log(chalk.magenta(`     Experience: ${member.experience} years total`));
+          console.log(chalk.green(`     Availability: ${Math.round(member.availability * 100)}%`));
+        });
+        
+        console.log(chalk.yellow.bold('\n📊 TEAM METRICS'));
+        console.log(chalk.gray('-'.repeat(30)));
+        console.log(`${chalk.cyan('Team Size:')}          ${result.team.size} members`);
+        console.log(`${chalk.cyan('Skill Coverage:')}     ${result.team.metrics.skillCoverage}%`);
+        console.log(`${chalk.cyan('Confidence Score:')}   ${result.team.metrics.confidence}%`);
+        console.log(`${chalk.cyan('Success Prediction:')} ${result.team.metrics.estimatedSuccess}%`);
+        
+        console.log(chalk.blue.bold('\n🔮 PROJECT PREDICTIONS'));
+        console.log(chalk.gray('-'.repeat(35)));
+        console.log(`${chalk.cyan('Duration:')}           ${result.predictions.timeToCompletion} days`);
+        console.log(`${chalk.cyan('Budget Estimate:')}    ${chalk.green('$' + result.predictions.budgetRequirement.toLocaleString())}`);
+        console.log(`${chalk.cyan('Success Rate:')}       ${result.predictions.successProbability}%`);
+        
+        if (result.recommendations.length > 0) {
+          console.log(chalk.white.bold('\n💡 ML RECOMMENDATIONS'));
+          console.log(chalk.gray('-'.repeat(25)));
+          result.recommendations.forEach((rec: any, index: number) => {
+            const priorityColor = rec.priority === 'high' ? chalk.red : rec.priority === 'medium' ? chalk.yellow : chalk.gray;
+            console.log(`  ${index + 1}. ${rec.description}`);
+            console.log(`     Priority: ${priorityColor(rec.priority.toUpperCase())}`);
+          });
+        }
+        
+        if (result.warnings.length > 0) {
+          console.log(chalk.red.bold('\n⚠️  WARNINGS'));
+          console.log(chalk.gray('-'.repeat(15)));
+          result.warnings.forEach((warning: any, index: number) => {
+            const severityEmoji = warning.severity === 'critical' ? '🚨' : warning.severity === 'error' ? '❌' : '⚠️';
+            console.log(`  ${severityEmoji} ${warning.message}`);
+          });
+        }
+        
+        console.log(chalk.green.bold('\n✅ TEAM OPTIMIZATION COMPLETE'));
+        console.log(chalk.blue('\n🎯 Available Strategies:'));
+        console.log('   balanced, experience-based, skill-based, cost-optimized,');
+        console.log('   time-optimized, innovation-focused, risk-minimized, collaboration-optimized');
+        console.log(chalk.gray('\n💡 Usage: krins optimize-team [project-path] [strategy]'));
+      }
+      
+    } catch (error) {
+      console.error(chalk.red('❌ Team optimization error:'), error);
+      console.log(chalk.blue('\n💡 Try: krins optimize-team . balanced'));
+      console.log(chalk.gray('Make sure the project path exists and is accessible'));
+    }
   }
 }
 
