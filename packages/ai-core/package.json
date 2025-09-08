@@ -2,15 +2,25 @@
   "name": "@claude-coordination/ai-core",
   "version": "3.0.0",
   "description": "AI orchestration and coordination components",
-  "main": "src/enhanced-magic-cli.cjs",
-  "type": "commonjs",
+  "main": "dist/enhanced-magic-cli.js",
+  "types": "dist/enhanced-magic-cli.d.ts",
+  "type": "module",
   "scripts": {
-    "start": "node src/enhanced-magic-cli.cjs",
-    "magic-cli": "node src/enhanced-magic-cli.cjs",
+    "build": "tsc",
+    "start": "node dist/enhanced-magic-cli.js",
+    "magic-cli": "tsx src/enhanced-magic-cli.ts",
+    "enhanced-cli": "tsx src/enhanced-magic-cli.ts",
     "ai-assist": "node src/adaptive-ai-assistant.cjs",
     "deploy-engine": "node src/magic-deployment-engine.cjs",
     "dashboard": "node src/dashboard-server.cjs",
-    "realtime-hub": "node src/realtime-hub.cjs"
+    "realtime-hub": "node src/realtime-hub.cjs",
+    "detect-project": "tsx src/universal-project-detector.ts",
+    "analyze": "tsx src/universal-project-detector.ts",
+    "cache": "tsx src/smart-response-cache.ts",
+    "cache-stats": "tsx src/smart-response-cache.ts stats",
+    "cache-clear": "tsx src/smart-response-cache.ts clear",
+    "cache-warm": "tsx src/smart-response-cache.ts warm",
+    "cache-cleanup": "tsx src/smart-response-cache.ts cleanup"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -18,9 +28,17 @@
     "axios": "^1.5.0",
     "openai": "^4.8.0",
     "dotenv": "^16.3.1",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.12"
   },
-  "keywords": ["ai", "coordination", "claude", "automation"],
-  "author": "Claude Code Coordination",
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "typescript": "^5.0.0",
+    "tsx": "^4.7.0"
+  },
+  "keywords": ["ai", "coordination", "claude", "automation", "krins", "cli"],
+  "author": "KRINS Universe Builder Team",
   "license": "MIT"
 }

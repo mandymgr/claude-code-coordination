@@ -1,0 +1,358 @@
+// Prisma schema for KRINS Universe Builder
+// Database: Neon (PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Used for migrations
+}
+
+// User management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  role      UserRole @default(DEVELOPER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  projects    Project[]
+  tasks       Task[]
+  sessions    Session[]
+  teamMembers TeamMember[]
+
+  @@map("users")
+}
+
+// Projects in the universe
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  repository  String? // Git repository URL
+  framework   String? // React, Next.js, etc.
+  language    String? // TypeScript, JavaScript, etc.
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Owner
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relations
+  tasks        Task[]
+  deployments  Deployment[]
+  qualityGates QualityGate[]
+  files        ProjectFile[]
+
+  @@map("projects")
+}
+
+// AI Tasks and coordination
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(PENDING)
+  priority    Priority   @default(MEDIUM)
+  aiProvider  AIProvider
+  model       String? // GPT-4, Claude-3, Gemini-Pro
+  type        TaskType
+
+  // Task configuration
+  context      Json? // Rich context data
+  requirements Json? // Specific requirements
+  constraints  Json? // Time, cost, quality constraints
+
+  // Results
+  result    Json? // AI-generated result
+  diff      String? // Code diff if applicable
+  artifacts Json? // Generated files, images, etc.
+
+  // Metrics
+  tokenUsage Int?
+  cost       Float?
+  duration   Int? // milliseconds
+  quality    Float? // Quality score 0-1
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  // Relations
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  qualityGates QualityGate[]
+  executions   TaskExecution[]
+
+  @@map("tasks")
+}
+
+// Task execution history
+model TaskExecution {
+  id          String          @id @default(cuid())
+  status      ExecutionStatus @default(RUNNING)
+  startedAt   DateTime        @default(now())
+  completedAt DateTime?
+
+  // Execution data
+  input        Json
+  output       Json?
+  errorMessage String?
+  logs         Json? // Execution logs
+  metrics      Json? // Performance metrics
+
+  // Relations
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("task_executions")
+}
+
+// Quality Gates and validation
+model QualityGate {
+  id     String          @id @default(cuid())
+  name   String
+  type   QualityGateType
+  status QualityStatus   @default(PENDING)
+
+  // Configuration
+  rules  Json // Quality rules and thresholds
+  config Json? // Gate-specific configuration
+
+  // Results
+  score  Float? // Quality score 0-100
+  issues Json? // Found issues
+  report Json? // Detailed report
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("quality_gates")
+}
+
+// AI Team coordination
+model AITeam {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  status      TeamStatus @default(ACTIVE)
+
+  // Team configuration
+  strategy    Json // Team coordination strategy
+  preferences Json? // AI provider preferences
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  members TeamMember[]
+
+  @@map("ai_teams")
+}
+
+model TeamMember {
+  id         String     @id @default(cuid())
+  role       MemberRole
+  aiProvider AIProvider
+  model      String
+
+  // Member configuration
+  specialties Json? // Areas of expertise
+  performance Json? // Performance metrics
+
+  // Relations
+  teamId String
+  team   AITeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@map("team_members")
+}
+
+// Deployment tracking
+model Deployment {
+  id          String           @id @default(cuid())
+  version     String
+  status      DeploymentStatus @default(PENDING)
+  environment String // dev, staging, production
+
+  // Deployment data
+  config Json? // Deployment configuration
+  logs   Json? // Deployment logs
+  url    String? // Deployed URL
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deployedAt DateTime?
+
+  // Relations
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("deployments")
+}
+
+// File system tracking
+model ProjectFile {
+  id       String  @id @default(cuid())
+  path     String
+  name     String
+  type     String? // file extension
+  size     Int?
+  checksum String? // File hash for change detection
+
+  // File metadata
+  language  String? // Programming language
+  framework String? // React, Vue, etc.
+  purpose   String? // component, service, test, etc.
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, path])
+  @@map("project_files")
+}
+
+// User sessions
+model Session {
+  id        String @id @default(cuid())
+  sessionId String @unique
+
+  // Session data
+  data      Json?
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  DEVELOPER
+  VIEWER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum TaskType {
+  CODE_GENERATION
+  CODE_REVIEW
+  DEBUGGING
+  REFACTORING
+  DOCUMENTATION
+  TESTING
+  DEPLOYMENT
+  ANALYSIS
+  OPTIMIZATION
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AIProvider {
+  CLAUDE
+  OPENAI
+  GOOGLE
+  ANTHROPIC
+}
+
+enum ExecutionStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  TIMEOUT
+}
+
+enum QualityGateType {
+  SECURITY_SCAN
+  LINT_CHECK
+  TYPE_CHECK
+  TEST_COVERAGE
+  BUILD_VALIDATION
+  PERFORMANCE_TEST
+  LICENSE_CHECK
+  DEPENDENCY_AUDIT
+}
+
+enum QualityStatus {
+  PENDING
+  RUNNING
+  PASSED
+  FAILED
+  SKIPPED
+}
+
+enum TeamStatus {
+  ACTIVE
+  PAUSED
+  DISBANDED
+}
+
+enum MemberRole {
+  LEAD
+  SPECIALIST
+  ASSISTANT
+  REVIEWER
+}
+
+enum DeploymentStatus {
+  PENDING
+  BUILDING
+  DEPLOYING
+  DEPLOYED
+  FAILED
+  ROLLED_BACK
+}
