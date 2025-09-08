@@ -4,7 +4,8 @@
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build --incremental",
+    "build:fast": "tsc --noEmit && swc src -d dist --config-module es6 --config-file .swcrc",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "test": "jest"

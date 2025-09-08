@@ -1,6 +1,17 @@
 import express from 'express';
 import { NeuralArchitectureSearch } from '../services/ai-automation/automl/neuralArchitectureSearch';
-import * as tf from '@tensorflow/tfjs-node';
+
+// Lazy load TensorFlow.js only when needed
+let tf: typeof import('@tensorflow/tfjs-node') | null = null;
+
+async function ensureTensorFlow() {
+  if (!tf) {
+    console.log('🧠 Loading TensorFlow.js on-demand...');
+    tf = await import('@tensorflow/tfjs-node');
+    console.log('✅ TensorFlow.js loaded successfully');
+  }
+  return tf;
+}
 
 const router: express.Router = express.Router();
 
