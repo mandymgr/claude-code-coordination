@@ -7,9 +7,25 @@
       "lastAccessed": 1757152489446,
       "accessCount": 1,
       "query": "--help"
+    },
+    "eba38dbcfc0c72c5022b2a1931d26e7f67f91bbfeb8ab5c0c4518d413f98d2af": {
+      "size": 2084,
+      "created": 1757286310798,
+      "expiresAt": 1757372710798,
+      "lastAccessed": 1757286310798,
+      "accessCount": 1,
+      "query": "Test dark mode toggle functionality in frontend"
+    },
+    "0759d5a7c89435e11371add49b566de8b948d6feeeda5e62200bc2fa60b4bed0": {
+      "size": 1191,
+      "created": 1757286988224,
+      "expiresAt": 1757373388224,
+      "lastAccessed": 1757286988224,
+      "accessCount": 1,
+      "query": "Run quality gates scan on current project"
     }
   },
-  "totalSize": 976,
+  "totalSize": 4251,
   "created": 1757152489444,
   "lastCleanup": 1757152489444
 }

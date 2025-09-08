@@ -11,6 +11,30 @@
         "code_language": "unknown",
         "complexity_level": "low"
       }
+    },
+    {
+      "timestamp": "2025-09-07T23:05:10.799Z",
+      "query_type": "testing_guidance",
+      "context": {},
+      "user_satisfaction": 0.5,
+      "patterns_used": {
+        "query_type": "testing_guidance",
+        "response_type": "testing_guidance",
+        "code_language": "unknown",
+        "complexity_level": "high"
+      }
+    },
+    {
+      "timestamp": "2025-09-07T23:16:28.225Z",
+      "query_type": "general_assistance",
+      "context": {},
+      "user_satisfaction": 0.8999999999999999,
+      "patterns_used": {
+        "query_type": "general_assistance",
+        "response_type": "general_assistance",
+        "code_language": "unknown",
+        "complexity_level": "low"
+      }
     }
   ],
   "learned_patterns": {},
