@@ -1,37 +1,8 @@
-#!/usr/bin/env node
-
 /**
- * MCP Server Tools Setup
- * Configures available tools for the MCP server
+ * MCP Tools setup - placeholder for future tool implementations
  */
 
-export function setupTools() {
-  const tools = [
-    {
-      name: 'assign-task',
-      description: 'Assign a task to an AI agent',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          task: { type: 'string' },
-          agentType: { type: 'string' }
-        }
-      }
-    },
-    {
-      name: 'quality-check',
-      description: 'Run quality checks on code',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          code: { type: 'string' }
-        }
-      }
-    }
-  ];
-  
-  console.log('🔧 Tools configured:', tools.length);
-  return tools;
+export function setupTools(): void {
+  // Future implementation for additional MCP tools
+  console.log('🔧 Tools setup complete');
 }
-
-export default setupTools;

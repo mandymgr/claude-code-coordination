@@ -387,7 +387,7 @@ class ClaudeCoordinationMCPServer {
   private async handleGetAgentStatus(args: any) {
     const { agent_id, include_metrics = true } = args;
     
-    const status = await this.agentPool.getStatus();
+    const status = await this.agentPool.getStatus(agent_id, include_metrics);
     
     let statusText = '🤖 **AI Agent Status Report**\\n\\n';
     
@@ -427,7 +427,7 @@ class ClaudeCoordinationMCPServer {
     
     for (const check of results.checks) {
       resultText += `**${check.name}:** ${check.passed ? '✅' : '❌'} ${check.message}\\n`;
-      if (check.issues && check.issues.length > 0) {
+      if (check.issues?.length > 0) {
         resultText += `  - ${check.issues.length} issues found\\n`;
         if (auto_fix && check.fixedIssues > 0) {
           resultText += `  - ${check.fixedIssues} issues auto-fixed\\n`;
