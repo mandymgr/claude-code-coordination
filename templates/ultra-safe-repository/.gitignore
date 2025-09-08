@@ -1,0 +1,164 @@
+# =============================================================================
+# 🔒 ULTRA-SAFE ENTERPRISE .gitignore TEMPLATE
+# Universal protection for all project types
+# Version: 1.0 (September 2025)
+# =============================================================================
+
+# 🔒 ALL LOCK FILES (comprehensive)
+**/*.lock
+**/package-lock.json
+**/yarn.lock
+**/bun.lock
+**/composer.lock
+**/Gemfile.lock
+**/poetry.lock
+**/Pipfile.lock
+**/*.lock.json
+.pnpm-lock.yaml
+
+# 🚫 BUILD OUTPUTS (comprehensive) 
+**/dist/
+**/build/
+**/out/
+**/.next/
+**/.nuxt/
+**/target/
+**/bin/
+**/obj/
+**/.output/
+**/public/build/
+**/assets/
+**/static/build/
+*.tsbuildinfo
+
+# 🔐 ENVIRONMENT & SECRETS (comprehensive)
+**/.env*
+**/secrets.*
+**/*.secret
+**/*.key
+**/*.pem
+**/*.crt
+**/*.p12
+**/*.keystore
+**/credentials.*
+**/auth.*
+**/.aws/
+**/.gcp/
+**/service-account.json
+
+# 🗑️ CACHE FILES (comprehensive)
+**/.cache/
+**/tmp/
+**/temp/
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/node_modules/.cache/
+**/.npm/
+**/.pnpm/
+**/.yarn/
+**/coverage/
+
+# 💾 DATABASE FILES (comprehensive)
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+**/*.mdb
+**/*.accdb
+**/database.json
+**/db.json
+**/*.dump
+**/*.sql.gz
+
+# 📝 LOG FILES (comprehensive)
+**/*.log
+**/logs/
+**/log/
+**/*.log.*
+**/crash.log
+**/error.log
+**/debug.log
+**/access.log
+**/combined.log
+
+# 🎯 SYSTEM FILES (comprehensive)
+.DS_Store
+**/.DS_Store
+Thumbs.db
+**/Thumbs.db
+ehthumbs.db
+**/*.tmp
+**/*.swp
+**/*.swo
+**/~*
+**/*~
+
+# 🤖 AI TOOLS & CLAUDE (comprehensive)
+.claude/
+**/.claude/
+.claude-coordination/
+**/.claude-coordination/
+.anthropic/
+**/.anthropic/
+.openai/
+**/.openai/
+**/ai-cache/
+**/llm-cache/
+
+# 🔧 DEVELOPMENT TOOLS
+**/.vscode/settings.json
+**/.idea/
+**/*.iml
+**/.fleet/
+**/.vscode/launch.json.bak
+
+# 🚀 DEPLOYMENT & HOSTING
+.vercel/
+**/.vercel/
+.netlify/
+**/.netlify/
+.firebase/
+**/.firebase/
+.serverless/
+**/.serverless/
+
+# 📦 PACKAGE MANAGERS
+**/node_modules/
+**/vendor/
+**/.bundle/
+**/venv/
+**/.venv/
+**/env/
+**/.env/
+
+# 🧪 TESTING
+**/coverage/
+**/.nyc_output/
+**/test-results/
+**/playwright-report/
+**/test-report/
+
+# 📊 MONITORING & ANALYTICS
+**/analytics/
+**/metrics/
+**/telemetry/
+**/.sentry/
+
+# 🚀 BACKUP & CLEANUP FILES
+**/backups/
+**/backup*/
+**/*.backup
+**/*.bak
+**/temp/
+**/tmp/
+
+# 🔒 PROJECT-SPECIFIC PATTERNS
+# Add your project-specific ignores here
+# Examples:
+# **/infra/kubernetes/k8s/secrets.yaml
+# **/helm/
+# **/docs/ (if docs are generated)
+
+# KEEP ONLY ESSENTIAL FILES FOR REPRODUCIBLE BUILDS
+!pnpm-lock.yaml
