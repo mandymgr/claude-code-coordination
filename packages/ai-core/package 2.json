@@ -5,7 +5,6 @@
   "main": "src/enhanced-magic-cli.cjs",
   "type": "commonjs",
   "scripts": {
-    "build": "echo 'CJS files - no build needed'",
     "start": "node src/enhanced-magic-cli.cjs",
     "magic-cli": "node src/enhanced-magic-cli.cjs",
     "ai-assist": "node src/adaptive-ai-assistant.cjs",
@@ -19,12 +18,7 @@
     "axios": "^1.5.0",
     "openai": "^4.8.0",
     "dotenv": "^16.3.1",
-    "cors": "^2.8.5",
-    "chalk": "^4.1.2",
-    "inquirer": "^8.2.6",
-    "ws": "^8.14.2",
-    "chokidar": "^3.5.3",
-    "commander": "^11.1.0"
+    "cors": "^2.8.5"
   },
   "keywords": ["ai", "coordination", "claude", "automation"],
   "author": "Claude Code Coordination",

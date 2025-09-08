@@ -35,20 +35,10 @@ class OnboardingWizard {
         this.context = context;
     }
     async show() {
-        // Check if onboarding was already completed
-        const config = vscode.workspace.getConfiguration('claude-coordination');
-        const onboardingCompleted = config.get('onboardingCompleted', false);
-        if (onboardingCompleted) {
-            const restart = await vscode.window.showInformationMessage('KRINS Code Coordination is already set up. Would you like to run the setup wizard again?', 'Yes, restart setup', 'No');
-            if (restart !== 'Yes, restart setup') {
-                return;
-            }
-        }
         // Create and show webview panel
-        this.panel = vscode.window.createWebviewPanel('krins-onboarding', 'KRINS Code Coordination - Setup Wizard', vscode.ViewColumn.One, {
+        this.panel = vscode.window.createWebviewPanel('krins-onboarding', 'Krins Code Coordination - Setup Wizard', vscode.ViewColumn.One, {
             enableScripts: true,
-            retainContextWhenHidden: true,
-            localResourceRoots: [this.context.extensionUri]
+            retainContextWhenHidden: true
         });
         // Set HTML content
         this.panel.webview.html = this.getHtmlContent();
@@ -83,13 +73,12 @@ class OnboardingWizard {
     }
     async validateServerConnection(serverUrl) {
         try {
-            // Check if we can connect to the KRINS backend server
             const response = await fetch(`${serverUrl}/health`);
             if (response.ok) {
                 await this.sendMessage({
                     type: 'serverValidated',
                     success: true,
-                    message: 'KRINS server connection established! Ready for AI coordination.'
+                    message: 'Server connection established!'
                 });
                 // Save server URL to configuration
                 await vscode.workspace.getConfiguration('claude-coordination')
@@ -100,86 +89,32 @@ class OnboardingWizard {
             }
         }
         catch (error) {
-            // Try to start local server if connection fails
-            try {
-                await this.sendMessage({
-                    type: 'serverValidated',
-                    success: false,
-                    message: `Cannot connect to server at ${serverUrl}. Trying to start local KRINS server...`
-                });
-                // Attempt to start the local KRINS server
-                await this.startLocalServer();
-                await this.sendMessage({
-                    type: 'serverValidated',
-                    success: true,
-                    message: 'Local KRINS server started successfully! 🚀'
-                });
-                // Save localhost URL
-                await vscode.workspace.getConfiguration('claude-coordination')
-                    .update('serverUrl', 'http://localhost:8080', vscode.ConfigurationTarget.Global);
-            }
-            catch (serverError) {
-                await this.sendMessage({
-                    type: 'serverValidated',
-                    success: false,
-                    message: `Failed to connect to server: ${error}. Please ensure KRINS server is running.`
-                });
-            }
-        }
-    }
-    async startLocalServer() {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
-            throw new Error('No workspace folder open');
-        }
-        // Try to find and start the backend server
-        const backendPath = path.join(workspaceFolder.uri.fsPath, 'apps', 'backend');
-        const aiCorePath = path.join(workspaceFolder.uri.fsPath, 'packages', 'ai-core');
-        if (fs.existsSync(backendPath)) {
-            // Start backend server
-            const { stdout } = await execAsync('npm run dev', { cwd: backendPath });
-            return stdout;
-        }
-        else if (fs.existsSync(aiCorePath)) {
-            // Start AI core server
-            const { stdout } = await execAsync('npm run dashboard', { cwd: aiCorePath });
-            return stdout;
-        }
-        else {
-            throw new Error('KRINS server not found in workspace');
+            await this.sendMessage({
+                type: 'serverValidated',
+                success: false,
+                message: `Failed to connect to server: ${error}`
+            });
         }
     }
     async setupOAuth(provider) {
         try {
-            // Check if already authenticated with git
+            // Check if already authenticated
             const { stdout } = await execAsync(`git config user.email`);
             if (stdout.trim()) {
                 await this.sendMessage({
                     type: 'oauthComplete',
                     success: true,
-                    message: `Already authenticated with Git (${stdout.trim()}). OAuth setup complete!`,
+                    message: `Already authenticated with ${provider}`,
                     userInfo: { email: stdout.trim() }
                 });
                 return;
             }
-            // Launch OAuth flow based on provider
-            let oauthUrl = '';
-            switch (provider) {
-                case 'github':
-                    oauthUrl = 'https://github.com/login';
-                    break;
-                case 'gitlab':
-                    oauthUrl = 'https://gitlab.com/users/sign_in';
-                    break;
-                case 'bitbucket':
-                    oauthUrl = 'https://bitbucket.org/account/signin/';
-                    break;
-            }
-            await vscode.env.openExternal(vscode.Uri.parse(oauthUrl));
+            // Launch OAuth flow (simplified - would need actual OAuth implementation)
+            await vscode.env.openExternal(vscode.Uri.parse(`https://github.com/login/oauth/authorize?client_id=YOUR_CLIENT_ID&scope=repo`));
             await this.sendMessage({
                 type: 'oauthComplete',
                 success: true,
-                message: `${provider.charAt(0).toUpperCase() + provider.slice(1)} OAuth page opened. Please complete authentication in your browser, then configure git credentials locally.`
+                message: 'OAuth flow initiated - complete authorization in browser'
             });
         }
         catch (error) {
@@ -199,97 +134,33 @@ class OnboardingWizard {
             }
             const repoPath = workspaceFolder.uri.fsPath;
             const gitDir = path.join(repoPath, '.git');
-            let repoInfo = {
-                path: repoPath,
-                name: path.basename(repoPath),
-                remote: null,
-                isGitRepo: false,
-                isKrinsRepo: false,
-                projectType: 'unknown'
-            };
-            // Check if it's a git repository
             if (fs.existsSync(gitDir)) {
-                repoInfo.isGitRepo = true;
-                try {
-                    const { stdout } = await execAsync('git remote get-url origin', { cwd: repoPath });
-                    repoInfo.remote = stdout.trim();
-                }
-                catch (error) {
-                    // No remote configured
-                }
+                // Get git remote
+                const { stdout } = await execAsync('git remote get-url origin', { cwd: repoPath });
+                const remoteUrl = stdout.trim();
+                await this.sendMessage({
+                    type: 'repoSelected',
+                    success: true,
+                    repoInfo: {
+                        path: repoPath,
+                        name: path.basename(repoPath),
+                        remote: remoteUrl,
+                        isGitRepo: true
+                    }
+                });
             }
-            // Enhanced project detection
-            const packageJsonPath = path.join(repoPath, 'package.json');
-            const claudeMdPath = path.join(repoPath, 'CLAUDE.md');
-            const krinsConfigPath = path.join(repoPath, '.krins');
-            if (fs.existsSync(packageJsonPath)) {
-                const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-                if (packageJson.name?.includes('krins') || packageJson.name?.includes('claude-coordination')) {
-                    repoInfo.isKrinsRepo = true;
-                }
-                // Advanced project type detection
-                const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
-                // React ecosystem
-                if (deps.react) {
-                    if (deps.next)
-                        repoInfo.projectType = 'Next.js';
-                    else if (deps.gatsby)
-                        repoInfo.projectType = 'Gatsby';
-                    else if (deps['react-native'])
-                        repoInfo.projectType = 'React Native';
-                    else
-                        repoInfo.projectType = 'React';
-                }
-                // Vue ecosystem
-                else if (deps.vue) {
-                    if (deps.nuxt)
-                        repoInfo.projectType = 'Nuxt.js';
-                    else
-                        repoInfo.projectType = 'Vue';
-                }
-                // Angular
-                else if (deps['@angular/core']) {
-                    repoInfo.projectType = 'Angular';
-                }
-                // Svelte
-                else if (deps.svelte) {
-                    repoInfo.projectType = 'Svelte';
-                }
-                // Node.js APIs
-                else if (deps.express) {
-                    repoInfo.projectType = 'Express API';
-                }
-                else if (deps.fastify) {
-                    repoInfo.projectType = 'Fastify API';
-                }
-                else if (deps['@nestjs/core']) {
-                    repoInfo.projectType = 'NestJS API';
-                }
-                // Libraries
-                else if (packageJson.main || packageJson.exports || packageJson.types) {
-                    repoInfo.projectType = deps.typescript ? 'TypeScript Library' : 'JavaScript Library';
-                }
-                // Electron
-                else if (deps.electron) {
-                    repoInfo.projectType = 'Electron App';
-                }
-                // Generic Node.js
-                else if (deps['@types/node'] || packageJson.engines?.node) {
-                    repoInfo.projectType = 'TypeScript/Node.js';
-                }
-                // Default fallback
-                else {
-                    repoInfo.projectType = 'JavaScript/Node.js';
-                }
+            else {
+                await this.sendMessage({
+                    type: 'repoSelected',
+                    success: true,
+                    repoInfo: {
+                        path: repoPath,
+                        name: path.basename(repoPath),
+                        remote: null,
+                        isGitRepo: false
+                    }
+                });
             }
-            if (fs.existsSync(claudeMdPath) || fs.existsSync(krinsConfigPath)) {
-                repoInfo.isKrinsRepo = true;
-            }
-            await this.sendMessage({
-                type: 'repoSelected',
-                success: true,
-                repoInfo
-            });
         }
         catch (error) {
             await this.sendMessage({
@@ -307,12 +178,10 @@ class OnboardingWizard {
             await configuration.update('autoQualityGates', config.qualityGates, vscode.ConfigurationTarget.Global);
             await configuration.update('preferredAI', config.aiProvider, vscode.ConfigurationTarget.Global);
             await configuration.update('autoLinting', config.autoLinting, vscode.ConfigurationTarget.Global);
-            await configuration.update('autoStartSession', config.autoStartSession, vscode.ConfigurationTarget.Global);
-            await configuration.update('showFileDecorations', true, vscode.ConfigurationTarget.Global);
             await this.sendMessage({
                 type: 'configurationSaved',
                 success: true,
-                message: 'KRINS configuration saved successfully! Your AI coordination preferences are now active.'
+                message: 'Default configuration saved successfully!'
             });
         }
         catch (error) {
@@ -325,34 +194,19 @@ class OnboardingWizard {
     }
     async runFirstTask(task) {
         try {
+            // Simulate a first task assignment
             await this.sendMessage({
                 type: 'taskStarted',
                 task,
-                message: 'Running your first KRINS AI-coordinated task...'
+                message: 'Running your first AI-coordinated task...'
             });
-            // Simulate running the selected task
-            let taskResult = '';
-            switch (task) {
-                case 'analyze':
-                    taskResult = await this.analyzeProject();
-                    break;
-                case 'readme':
-                    taskResult = await this.generateReadme();
-                    break;
-                case 'tests':
-                    taskResult = await this.suggestTests();
-                    break;
-                case 'cleanup':
-                    taskResult = await this.cleanupCode();
-                    break;
-                default:
-                    taskResult = 'Task analysis completed';
-            }
+            // Add a small delay to simulate processing
+            await new Promise(resolve => setTimeout(resolve, 2000));
             await this.sendMessage({
                 type: 'taskCompleted',
                 success: true,
                 task,
-                message: `✅ First task completed successfully! ${taskResult}`
+                message: 'First task completed successfully! 🎉'
             });
         }
         catch (error) {
@@ -364,41 +218,20 @@ class OnboardingWizard {
             });
         }
     }
-    async analyzeProject() {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder)
-            return 'No workspace to analyze';
-        const files = await vscode.workspace.findFiles('**/*.{js,ts,jsx,tsx,py,java,cpp}');
-        return `Found ${files.length} code files ready for AI coordination`;
-    }
-    async generateReadme() {
-        return 'README analysis complete - KRINS can now generate comprehensive documentation for your project';
-    }
-    async suggestTests() {
-        const testFiles = await vscode.workspace.findFiles('**/*.{test,spec}.{js,ts}');
-        return `Found ${testFiles.length} test files - KRINS can suggest additional test coverage`;
-    }
-    async cleanupCode() {
-        return 'Code structure analyzed - KRINS can help optimize and clean up your codebase';
-    }
     async completeOnboarding() {
         try {
             // Mark onboarding as complete
             await vscode.workspace.getConfiguration('claude-coordination')
                 .update('onboardingCompleted', true, vscode.ConfigurationTarget.Global);
             // Show completion message
-            const action = await vscode.window.showInformationMessage('🎉 Welcome to KRINS Code Coordination! You\'re all set to start multi-AI powered development.', 'Open Dashboard', 'Assign First Task', 'View Documentation');
-            switch (action) {
-                case 'Open Dashboard':
+            vscode.window.showInformationMessage('🎉 Welcome to Krins Code Coordination! You\'re all set to start AI-powered development.', 'Open Dashboard', 'Assign First Task').then(selection => {
+                if (selection === 'Open Dashboard') {
                     vscode.commands.executeCommand('claude-coordination.openDashboard');
-                    break;
-                case 'Assign First Task':
+                }
+                else if (selection === 'Assign First Task') {
                     vscode.commands.executeCommand('claude-coordination.assignTask');
-                    break;
-                case 'View Documentation':
-                    vscode.env.openExternal(vscode.Uri.parse('https://github.com/anthropics/claude-code'));
-                    break;
-            }
+                }
+            });
             // Close wizard
             this.panel?.dispose();
         }
@@ -460,18 +293,17 @@ class OnboardingWizard {
             }
             
             .hero h1 {
-                font-size: 2.8em;
+                font-size: 2.5em;
                 margin-bottom: 16px;
-                background: linear-gradient(45deg, #007ACC, #4CAF50, #FF6B35);
+                background: linear-gradient(45deg, #007ACC, #4CAF50);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
-                background-clip: text;
             }
             
             .hero p {
-                font-size: 1.3em;
-                opacity: 0.9;
-                max-width: 700px;
+                font-size: 1.2em;
+                opacity: 0.8;
+                max-width: 600px;
                 margin: 0 auto;
             }
             
@@ -598,26 +430,8 @@ class OnboardingWizard {
             
             .feature-item p {
                 margin: 0;
-                opacity: 0.85;
-                font-size: 0.95em;
-            }
-            
-            .repo-details {
-                background: var(--vscode-editor-inactiveSelectionBackground);
-                padding: 20px;
-                border-radius: 8px;
-                margin: 20px 0;
-                border: 1px solid var(--vscode-panel-border);
-            }
-            
-            .repo-badge {
-                display: inline-block;
-                padding: 4px 12px;
-                background: var(--vscode-button-background);
-                color: var(--vscode-button-foreground);
-                border-radius: 12px;
-                font-size: 0.85em;
-                margin: 4px 8px 4px 0;
+                opacity: 0.8;
+                font-size: 0.9em;
             }
             
             .spinner {
@@ -646,74 +460,63 @@ class OnboardingWizard {
             <!-- Welcome Step -->
             <div class="step active" id="step-welcome">
                 <div class="hero">
-                    <h1>🪐 Welcome to KRINS Code Coordination</h1>
-                    <p>Transform your VS Code into an enterprise-grade multi-AI orchestration hub. Claude, GPT-4, and Gemini working together to supercharge your development workflow!</p>
+                    <h1>🚀 Welcome to Krins Code Coordination</h1>
+                    <p>Transform your VS Code into a multi-AI orchestration hub. Let's get you set up in just a few steps!</p>
                 </div>
                 
                 <div class="feature-list">
                     <div class="feature-item">
-                        <h3>🤖 Multi-AI Team Orchestration</h3>
-                        <p>Claude 3.5 Sonnet, GPT-4, and Gemini Pro working together with intelligent task routing</p>
+                        <h3>🤖 Multi-AI Agents</h3>
+                        <p>Claude, GPT-4, and Gemini working together on your code</p>
                     </div>
                     <div class="feature-item">
-                        <h3>🛡️ Enterprise Quality Gates</h3>
-                        <p>Automated testing, linting, security scanning, and code quality enforcement</p>
+                        <h3>🛡️ Quality Gates</h3>
+                        <p>Automated testing, linting, and security checks</p>
                     </div>
                     <div class="feature-item">
-                        <h3>🧠 Smart Bandit Routing</h3>
-                        <p>Machine learning algorithms automatically select the best AI for each task</p>
+                        <h3>🧠 Smart Routing</h3>
+                        <p>Bandit algorithms select the best AI for each task</p>
                     </div>
                     <div class="feature-item">
-                        <h3>📊 Learning & Analytics</h3>
-                        <p>Continuous improvement through outcome tracking and performance optimization</p>
-                    </div>
-                    <div class="feature-item">
-                        <h3>🔒 Real-time Collaboration</h3>
-                        <p>File locking, session management, and team coordination features</p>
-                    </div>
-                    <div class="feature-item">
-                        <h3>⚡ Magical Automation</h3>
-                        <p>One-command deployments, auto-fixes, and intelligent project detection</p>
+                        <h3>📊 Learning System</h3>
+                        <p>Continuous improvement through outcome tracking</p>
                     </div>
                 </div>
                 
                 <div class="button-group">
-                    <button class="btn btn-primary" onclick="nextStep()">🚀 Get Started</button>
+                    <button class="btn btn-primary" onclick="nextStep()">Get Started</button>
                 </div>
             </div>
 
             <!-- Server Connection Step -->
             <div class="step" id="step-server">
-                <h2>🌐 Connect to KRINS Server</h2>
-                <p>First, let's connect to your KRINS coordination server. This is the brain of the operation where all AI magic happens.</p>
+                <h2>🌐 Connect to Krins Server</h2>
+                <p>First, let's connect to your Krins coordination server. This is where all the AI magic happens.</p>
                 
                 <div class="form-group">
                     <label for="serverUrl">Server URL:</label>
-                    <input type="url" id="serverUrl" value="http://localhost:8080" placeholder="https://your-krins-server.com">
-                    <small style="opacity: 0.7; margin-top: 8px; display: block;">
-                        💡 Leave as localhost if running KRINS locally, or enter your deployed server URL
-                    </small>
+                    <input type="url" id="serverUrl" value="http://localhost:8080" placeholder="https://your-server.com">
                 </div>
                 
                 <div id="server-status"></div>
                 
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="prevStep()">Back</button>
-                    <button class="btn btn-primary" onclick="validateServer()">🔍 Test Connection</button>
+                    <button class="btn btn-primary" onclick="validateServer()">Test Connection</button>
                 </div>
             </div>
 
             <!-- OAuth Step -->
             <div class="step" id="step-oauth">
                 <h2>🔐 Connect Your Git Provider</h2>
-                <p>Connect your repository provider to enable seamless code coordination, pull request management, and deployment automation.</p>
+                <p>Connect your repository provider to enable seamless code coordination and pull request management.</p>
                 
                 <div class="form-group">
                     <label>Choose your Git provider:</label>
                     <select id="gitProvider">
-                        <option value="github">🐙 GitHub</option>
-                        <option value="gitlab">🦊 GitLab</option>
-                        <option value="bitbucket">🪣 Bitbucket</option>
+                        <option value="github">GitHub</option>
+                        <option value="gitlab">GitLab</option>
+                        <option value="bitbucket">Bitbucket</option>
                     </select>
                 </div>
                 
@@ -721,78 +524,73 @@ class OnboardingWizard {
                 
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="prevStep()">Back</button>
-                    <button class="btn btn-primary" onclick="setupOAuth()">🔗 Connect Account</button>
+                    <button class="btn btn-primary" onclick="setupOAuth()">Connect Account</button>
                 </div>
             </div>
 
             <!-- Repository Step -->
             <div class="step" id="step-repo">
-                <h2>📁 Analyze Repository</h2>
-                <p>We'll analyze your current workspace to understand the project structure, detect frameworks, and configure optimal AI coordination.</p>
+                <h2>📁 Select Repository</h2>
+                <p>We'll analyze your current workspace to understand the project structure.</p>
                 
                 <div id="repo-info"></div>
                 
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="prevStep()">Back</button>
-                    <button class="btn btn-primary" onclick="selectRepo()">🔍 Analyze Workspace</button>
+                    <button class="btn btn-primary" onclick="selectRepo()">Analyze Workspace</button>
                 </div>
             </div>
 
             <!-- Configuration Step -->
             <div class="step" id="step-config">
-                <h2>⚙️ Configure AI Preferences</h2>
-                <p>Set your preferences for AI coordination, quality gates, and automation features.</p>
+                <h2>⚙️ Configure Defaults</h2>
+                <p>Set your preferences for AI coordination and quality gates.</p>
                 
                 <div class="form-group">
                     <label>Preferred AI for initial routing:</label>
                     <select id="aiProvider">
-                        <option value="claude">🧠 Claude 3.5 Sonnet (Recommended)</option>
-                        <option value="gpt4">🤖 GPT-4 Turbo</option>
-                        <option value="gemini">💎 Gemini Pro</option>
-                        <option value="auto">✨ Auto-select (Bandit routing)</option>
+                        <option value="claude">Claude 3.5 Sonnet (Recommended)</option>
+                        <option value="gpt4">GPT-4</option>
+                        <option value="gemini">Gemini Pro</option>
+                        <option value="auto">Auto-select (Bandit routing)</option>
                     </select>
                 </div>
                 
                 <div class="checkbox-group">
                     <input type="checkbox" id="qualityGates" checked>
-                    <label for="qualityGates">🛡️ Enable quality gates (build, test, lint, security)</label>
+                    <label for="qualityGates">Enable quality gates (build, test, lint)</label>
                 </div>
                 
                 <div class="checkbox-group">
                     <input type="checkbox" id="autoLinting" checked>
-                    <label for="autoLinting">🔧 Auto-fix linting and formatting issues</label>
+                    <label for="autoLinting">Auto-fix linting issues</label>
                 </div>
                 
                 <div class="checkbox-group">
                     <input type="checkbox" id="notifications" checked>
-                    <label for="notifications">📢 Show progress notifications and status updates</label>
-                </div>
-                
-                <div class="checkbox-group">
-                    <input type="checkbox" id="autoStartSession" checked>
-                    <label for="autoStartSession">⚡ Auto-start coordination session when opening workspace</label>
+                    <label for="notifications">Show progress notifications</label>
                 </div>
                 
                 <div id="config-status"></div>
                 
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="prevStep()">Back</button>
-                    <button class="btn btn-primary" onclick="saveConfig()">💾 Save Configuration</button>
+                    <button class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
                 </div>
             </div>
 
             <!-- First Task Step -->
             <div class="step" id="step-task">
-                <h2>🎯 Try Your First AI Task</h2>
-                <p>Let's run a simple task to make sure everything is working perfectly and showcase KRINS capabilities!</p>
+                <h2>🎯 Try Your First Task</h2>
+                <p>Let's run a simple task to make sure everything is working perfectly!</p>
                 
                 <div class="form-group">
                     <label for="firstTask">Choose a starter task:</label>
                     <select id="firstTask">
-                        <option value="analyze">📊 Analyze project structure and dependencies</option>
-                        <option value="readme">📝 Generate comprehensive README documentation</option>
-                        <option value="tests">🧪 Suggest unit test improvements and coverage</option>
-                        <option value="cleanup">✨ Code cleanup and optimization recommendations</option>
+                        <option value="analyze">Analyze code structure</option>
+                        <option value="readme">Generate README documentation</option>
+                        <option value="tests">Add unit tests</option>
+                        <option value="cleanup">Code cleanup and formatting</option>
                     </select>
                 </div>
                 
@@ -800,46 +598,38 @@ class OnboardingWizard {
                 
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="prevStep()">Back</button>
-                    <button class="btn btn-primary" onclick="runFirstTask()">🚀 Run Task</button>
+                    <button class="btn btn-primary" onclick="runFirstTask()">Run Task</button>
                 </div>
             </div>
 
             <!-- Completion Step -->
             <div class="step" id="step-complete">
                 <div class="hero">
-                    <h1>🎉 KRINS is Ready!</h1>
-                    <p>Your multi-AI coordination system is now configured and ready to revolutionize your development workflow. Welcome to the future of coding!</p>
+                    <h1>🎉 You're All Set!</h1>
+                    <p>Krins Code Coordination is now configured and ready to supercharge your development workflow.</p>
                 </div>
                 
                 <div class="feature-list">
                     <div class="feature-item">
-                        <h3>🎯 Next: Assign Tasks</h3>
-                        <p>Use <code>Ctrl+Shift+T</code> or Command Palette to assign your first AI-coordinated task</p>
+                        <h3>📋 Next Steps</h3>
+                        <p>Try the "Assign Task" command (Ctrl+Shift+T) to get started</p>
                     </div>
                     <div class="feature-item">
-                        <h3>📊 Dashboard Access</h3>
-                        <p>Monitor AI performance, track metrics, and view team collaboration in the web dashboard</p>
+                        <h3>📊 Dashboard</h3>
+                        <p>Monitor AI performance and team metrics in the web dashboard</p>
                     </div>
                     <div class="feature-item">
-                        <h3>🛡️ Quality Assurance</h3>
-                        <p>All code changes automatically validated through quality gates before application</p>
+                        <h3>🛡️ Quality Gates</h3>
+                        <p>All code changes will be automatically validated before application</p>
                     </div>
                     <div class="feature-item">
-                        <h3>📚 Continuous Learning</h3>
-                        <p>The system learns from outcomes to improve AI selection and task routing</p>
-                    </div>
-                    <div class="feature-item">
-                        <h3>🔒 Team Coordination</h3>
-                        <p>Real-time file locking and session management for seamless collaboration</p>
-                    </div>
-                    <div class="feature-item">
-                        <h3>⚡ Magic Commands</h3>
-                        <p>One-click deployments, auto-fixes, and intelligent project management</p>
+                        <h3>📚 Learning</h3>
+                        <p>The system will learn from outcomes to improve future decisions</p>
                     </div>
                 </div>
                 
-                <div class="button-group" style="justify-content: center;">
-                    <button class="btn btn-primary" onclick="completeOnboarding()">🚀 Start Developing with KRINS!</button>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="completeOnboarding()">Start Developing!</button>
                 </div>
             </div>
         </div>
@@ -878,7 +668,7 @@ class OnboardingWizard {
             function validateServer() {
                 const serverUrl = document.getElementById('serverUrl').value;
                 const statusDiv = document.getElementById('server-status');
-                statusDiv.innerHTML = '<div class="status-message"><span class="spinner"></span>Testing KRINS server connection...</div>';
+                statusDiv.innerHTML = '<div class="status-message"><span class="spinner"></span>Testing connection...</div>';
                 
                 vscode.postMessage({
                     command: 'validateServer',
@@ -889,7 +679,7 @@ class OnboardingWizard {
             function setupOAuth() {
                 const provider = document.getElementById('gitProvider').value;
                 const statusDiv = document.getElementById('oauth-status');
-                statusDiv.innerHTML = '<div class="status-message"><span class="spinner"></span>Setting up OAuth with ' + provider.charAt(0).toUpperCase() + provider.slice(1) + '...</div>';
+                statusDiv.innerHTML = '<div class="status-message"><span class="spinner"></span>Setting up OAuth...</div>';
                 
                 vscode.postMessage({
                     command: 'setupOAuth',
@@ -899,7 +689,7 @@ class OnboardingWizard {
             
             function selectRepo() {
                 const statusDiv = document.getElementById('repo-info');
-                statusDiv.innerHTML = '<div class="status-message"><span class="spinner"></span>Analyzing workspace structure and detecting project type...</div>';
+                statusDiv.innerHTML = '<div class="status-message"><span class="spinner"></span>Analyzing workspace...</div>';
                 
                 vscode.postMessage({
                     command: 'selectRepo'
@@ -911,12 +701,11 @@ class OnboardingWizard {
                     aiProvider: document.getElementById('aiProvider').value,
                     qualityGates: document.getElementById('qualityGates').checked,
                     autoLinting: document.getElementById('autoLinting').checked,
-                    notifications: document.getElementById('notifications').checked,
-                    autoStartSession: document.getElementById('autoStartSession').checked
+                    notifications: document.getElementById('notifications').checked
                 };
                 
                 const statusDiv = document.getElementById('config-status');
-                statusDiv.innerHTML = '<div class="status-message"><span class="spinner"></span>Saving KRINS configuration...</div>';
+                statusDiv.innerHTML = '<div class="status-message"><span class="spinner"></span>Saving configuration...</div>';
                 
                 vscode.postMessage({
                     command: 'configureDefaults',
@@ -927,7 +716,7 @@ class OnboardingWizard {
             function runFirstTask() {
                 const task = document.getElementById('firstTask').value;
                 const statusDiv = document.getElementById('task-status');
-                statusDiv.innerHTML = '<div class="status-message"><span class="spinner"></span>Running your first KRINS AI task...</div>';
+                statusDiv.innerHTML = '<div class="status-message"><span class="spinner"></span>Running first task...</div>';
                 
                 vscode.postMessage({
                     command: 'runFirstTask',
@@ -974,22 +763,16 @@ class OnboardingWizard {
                         const repoInfo = document.getElementById('repo-info');
                         if (message.success) {
                             const repo = message.repoInfo;
-                            let badges = '';
-                            if (repo.isGitRepo) badges += '<span class="repo-badge">Git Repository</span>';
-                            if (repo.isKrinsRepo) badges += '<span class="repo-badge">KRINS Enabled</span>';
-                            if (repo.projectType !== 'unknown') badges += '<span class="repo-badge">' + repo.projectType + '</span>';
-                            
                             repoInfo.innerHTML = \`
-                                <div class="repo-details">
+                                <div class="status-message status-success">
                                     <h4>✅ Repository Analysis Complete</h4>
-                                    <p><strong>📁 Name:</strong> \${repo.name}</p>
-                                    <p><strong>📂 Path:</strong> \${repo.path}</p>
-                                    <p><strong>🏷️ Type:</strong> \${repo.projectType}</p>
-                                    \${repo.remote ? \`<p><strong>🌐 Remote:</strong> \${repo.remote}</p>\` : ''}
-                                    <div style="margin-top: 12px;">\${badges}</div>
+                                    <p><strong>Name:</strong> \${repo.name}</p>
+                                    <p><strong>Path:</strong> \${repo.path}</p>
+                                    <p><strong>Git Repository:</strong> \${repo.isGitRepo ? 'Yes' : 'No'}</p>
+                                    \${repo.remote ? \`<p><strong>Remote:</strong> \${repo.remote}</p>\` : ''}
                                 </div>
                             \`;
-                            setTimeout(() => nextStep(), 2500);
+                            setTimeout(() => nextStep(), 2000);
                         } else {
                             repoInfo.innerHTML = '<div class="status-message status-error">❌ ' + message.message + '</div>';
                         }

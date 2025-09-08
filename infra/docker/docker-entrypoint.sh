@@ -1,10 +1,10 @@
 #!/bin/sh
 set -e
 
-# Docker entrypoint script for Claude Code Coordination
+# Docker entrypoint script for KRINS-Universe-Builder
 # Handles initialization, health checks, and graceful startup
 
-echo "🚀 Starting Claude Code Coordination Enterprise Platform..."
+echo "🚀 Starting KRINS-Universe-Builder Enterprise Platform..."
 
 # Function to wait for database connection
 wait_for_db() {
@@ -89,7 +89,7 @@ health_check() {
     echo "🏥 Performing application health check..."
     
     # Start the application in background for health check
-    pnpm --filter @ccc/server start &
+    pnpm --filter @claude-coordination/backend start &
     APP_PID=$!
     
     # Wait for application to start
@@ -146,8 +146,8 @@ main() {
     echo "
     ╔═══════════════════════════════════════════════════╗
     ║                                                   ║
-    ║       🤖 Claude Code Coordination v3.0.0         ║
-    ║       Enterprise AI Platform                      ║
+    ║       🌌 KRINS-Universe-Builder v3.0.0           ║
+    ║       Ultimate AI Development Universe            ║
     ║                                                   ║
     ║       🚀 Production Ready                         ║
     ║       🔒 Security Hardened                        ║
@@ -159,7 +159,7 @@ main() {
     echo "🎉 Starting application server..."
     
     # Start the main application
-    exec pnpm --filter @ccc/server start
+    exec pnpm --filter @claude-coordination/backend start
 }
 
 # Execute main function

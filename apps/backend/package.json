@@ -10,11 +10,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@claude-coordination/database": "workspace:*",
-    "@claude-coordination/api": "workspace:*",
     "@opentelemetry/api": "^1.7.0",
     "@tensorflow/tfjs-node": "^4.15.0",
-    "@trpc/server": "^10.45.0",
     "axios": "^1.5.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
@@ -28,11 +25,9 @@
     "jsonwebtoken": "^9.0.0",
     "multer": "^2.0.2",
     "redis": "^4.6.0",
-    "superjson": "^2.2.1",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
-    "ws": "^8.14.0",
-    "zod": "^3.22.4"
+    "ws": "^8.14.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

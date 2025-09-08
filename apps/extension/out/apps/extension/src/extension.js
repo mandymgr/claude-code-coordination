@@ -31,29 +31,17 @@ const child_process_1 = require("child_process");
 const statusProvider_1 = require("./statusProvider");
 const decorationProvider_1 = require("./decorationProvider");
 const webDashboard_1 = require("./webDashboard");
-const dashboardIntegration_1 = require("./dashboardIntegration");
 const diffPreviewProvider_1 = require("./diffPreviewProvider");
 const qualityGateProvider_1 = require("./qualityGateProvider");
 const index_js_1 = require("./commands/index.js");
 const onboardingWizard_js_1 = require("./onboardingWizard.js");
 function activate(context) {
-    console.log('🚀 KRINS AI Coordination extension is now active!');
-    // Initialize dashboard integration
-    const config = vscode.workspace.getConfiguration('claude-coordination');
-    const dashboardIntegration = dashboardIntegration_1.DashboardIntegration.getInstance({
-        serverPort: config.get('webDashboardPort') || 3000,
-        autoStart: true,
-        enableRealTimeUpdates: true,
-        updateInterval: 5000,
-        serverTimeout: 10000
-    });
+    console.log('🚀 Claude Code Coordination extension is now active!');
     // Initialize providers
     const statusProvider = new statusProvider_1.CoordinationStatusProvider();
     const decorationProvider = new decorationProvider_1.CoordinationDecorationProvider();
     const diffPreviewProvider = new diffPreviewProvider_1.DiffPreviewProvider(context.extensionUri);
     const qualityGateProvider = new qualityGateProvider_1.QualityGateProvider(context.extensionUri, context);
-    // Create dashboard status bar item
-    const dashboardStatusItem = dashboardIntegration_1.DashboardUtils.createServerStatusItem(context);
     // Register tree view
     vscode.window.createTreeView('claude-coordination-status', {
         treeDataProvider: statusProvider,
@@ -64,16 +52,9 @@ function activate(context) {
     // Register quality gate webview
     vscode.window.registerWebviewViewProvider(qualityGateProvider_1.QualityGateProvider.viewType, qualityGateProvider);
     // Auto-start coordination session if enabled
+    const config = vscode.workspace.getConfiguration('claude-coordination');
     if (config.get('autoStartSession') && vscode.workspace.workspaceFolders) {
         startCoordinationSession();
-        // Auto-start dashboard server
-        setTimeout(async () => {
-            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-            if (workspaceFolder) {
-                await dashboardIntegration.startServer(workspaceFolder);
-                dashboardIntegration.startHealthMonitoring(context);
-            }
-        }, 2000); // Delay to allow workspace to fully initialize
     }
     // Register commands
     const commands = [
@@ -119,10 +100,6 @@ function activate(context) {
     }, 5000);
     context.subscriptions.push({
         dispose: () => clearInterval(statusInterval)
-    });
-    // Clean up dashboard integration on extension deactivation
-    context.subscriptions.push({
-        dispose: () => dashboardIntegration.dispose()
     });
 }
 exports.activate = activate;
@@ -250,9 +227,7 @@ async function aiAssist() {
 }
 async function openWebDashboard() {
     try {
-        const context = vscode.extensions.getExtension('krins-dev.claude-coordination-extension');
-        const extensionPath = context?.extensionPath || '';
-        webDashboard_1.WebDashboardPanel.createOrShow(extensionPath);
+        webDashboard_1.WebDashboardPanel.createOrShow();
     }
     catch (error) {
         vscode.window.showErrorMessage(`Failed to open web dashboard: ${error}`);

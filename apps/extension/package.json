@@ -1,5 +1,5 @@
 {
-  "name": "claude-coordination-extension",
+  "name": "@claude-coordination/extension",
   "displayName": "Krins Code Coordination - AI Team Development",
   "description": "Transform your VS Code into a multi-AI orchestration hub. Assign tasks to specialized AI agents, get quality-gated code changes, and scale development with intelligent automation.",
   "version": "3.0.0",

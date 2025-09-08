@@ -9,13 +9,6 @@ export default defineConfig({
     host: true
   },
   build: {
-    outDir: process.env.VERCEL ? 'dist' : '../../../dist/dev-system'
-  },
-  define: {
-    'import.meta.env': JSON.stringify({
-      MODE: process.env.NODE_ENV || 'development',
-      PROD: process.env.NODE_ENV === 'production',
-      DEV: process.env.NODE_ENV !== 'production'
-    })
+    outDir: '../../../dist/dev-system'
   }
 })

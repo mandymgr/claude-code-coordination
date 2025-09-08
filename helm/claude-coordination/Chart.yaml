@@ -1,20 +1,24 @@
 apiVersion: v2
-name: claude-coordination
-description: A Helm chart for Claude Code Coordination Platform
+name: krins-universe-builder
+description: A Helm chart for KRINS-Universe-Builder - Ultimate AI Development Universe
 type: application
-version: 1.0.0
-appVersion: "1.0.0"
-home: https://github.com/krins/claude-code-coordination
+version: 3.0.0
+appVersion: "3.0.0"
+home: https://github.com/mandymgr/KRINS-Universe-Builder
 sources:
-  - https://github.com/krins/claude-code-coordination
+  - https://github.com/mandymgr/KRINS-Universe-Builder
 maintainers:
-  - name: Krins Development Team
+  - name: KRINS-Universe-Builder Team
     email: admin@krins.dev
 keywords:
   - ai
+  - universe
+  - builder
+  - krins
+  - multi-ai
   - coordination
   - development
-  - claude
-  - productivity
+  - enterprise
+  - automation
 annotations:
-  category: Development Tools
+  category: AI Development Platform
