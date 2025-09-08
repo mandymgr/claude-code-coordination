@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Production Startup Script for Claude Code Coordination Server
-# Phase 4: Production Optimization Complete
+# Production Startup Script for KRINS-Universe-Builder Server
+# Ultimate AI Development Universe - Production Optimization Complete
 
 set -euo pipefail
 
@@ -10,6 +10,8 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
@@ -17,9 +19,11 @@ NODE_ENV=${NODE_ENV:-production}
 PORT=${PORT:-8080}
 HEALTH_CHECK_URL="http://localhost:${PORT}/health"
 PERFORMANCE_CHECK_URL="http://localhost:${PORT}/api/performance/metrics"
+AI_COORDINATION_URL="http://localhost:${PORT}/api/ai/coordination"
+UNIVERSE_STATUS_URL="http://localhost:${PORT}/api/universe/status"
 
-echo -e "${BLUE}🚀 Claude Code Coordination - Production Startup${NC}"
-echo -e "${BLUE}Phase 4: Production Optimization${NC}"
+echo -e "${PURPLE}🌌 KRINS-Universe-Builder - Production Startup${NC}"
+echo -e "${CYAN}Ultimate AI Development Universe${NC}"
 echo "=================================================="
 
 # Function to print colored output
@@ -90,7 +94,7 @@ print_info "Checking database connections..."
 
 # Check PostgreSQL connection (basic check)
 if command -v psql &> /dev/null; then
-    PGPASSWORD=${POSTGRES_PASSWORD:-} psql -h ${POSTGRES_HOST:-localhost} -U ${POSTGRES_USER:-claude} -d ${POSTGRES_DB:-claude_coordination_prod} -c "SELECT 1;" &> /dev/null
+    PGPASSWORD=${POSTGRES_PASSWORD:-} psql -h ${POSTGRES_HOST:-localhost} -U ${POSTGRES_USER:-krins} -d ${POSTGRES_DB:-krins_universe_builder_prod} -c "SELECT 1;" &> /dev/null
     if [[ $? -eq 0 ]]; then
         print_status "PostgreSQL connection successful"
     else
@@ -126,13 +130,13 @@ print_status "Performance tuning applied"
 
 # Start the server
 echo ""
-print_info "Starting Claude Code Coordination Server..."
+print_info "Starting KRINS-Universe-Builder Server..."
 print_info "Environment: $NODE_ENV"
 print_info "Port: $PORT"
 print_info "Memory limit: 4096MB"
 
 # Create PID file
-PID_FILE="/tmp/claude-coordination.pid"
+PID_FILE="/tmp/krins-universe-builder.pid"
 
 # Function to cleanup on exit
 cleanup() {
@@ -215,21 +219,27 @@ print_status "✅ Production TypeScript compilation"
 print_status "✅ Load testing capabilities"
 
 echo ""
-print_status "🎉 Phase 4: Production Optimization COMPLETE!"
+print_status "🌌 KRINS-Universe-Builder: Production Universe READY!"
 echo ""
 print_info "Server Details:"
 echo "  - Health Check: $HEALTH_CHECK_URL"
 echo "  - Performance: $PERFORMANCE_CHECK_URL"
 echo "  - API Docs: http://localhost:$PORT/api"
 echo "  - Dashboard: http://localhost:$PORT"
+echo "  - AI Coordination: $AI_COORDINATION_URL"
+echo "  - Universe Status: $UNIVERSE_STATUS_URL"
 echo ""
-print_info "Production Features Enabled:"
+print_info "KRINS Universe Features Enabled:"
+echo "  - Multi-AI Orchestration (Claude, GPT-4, Gemini)"
 echo "  - Advanced memory management"
 echo "  - Connection pooling optimization"  
 echo "  - Lazy loading for dependencies"
 echo "  - Performance monitoring API"
 echo "  - Load testing capabilities"
 echo "  - Circuit breaker patterns"
+echo "  - AI Team Coordination"
+echo "  - Quality Gate System"
+echo "  - Context-Aware Development"
 echo ""
 print_info "Logs are being written to stdout/stderr"
 print_info "Use Ctrl+C to gracefully shutdown"
