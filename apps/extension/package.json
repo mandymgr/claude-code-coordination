@@ -1,0 +1,314 @@
+{
+  "name": "@claude-coordination/extension",
+  "displayName": "Krins Code Coordination - AI Team Development",
+  "description": "Transform your VS Code into a multi-AI orchestration hub. Assign tasks to specialized AI agents, get quality-gated code changes, and scale development with intelligent automation.",
+  "version": "3.0.0",
+  "publisher": "krins-dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mandymgr/claude-code-coordination.git"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Other",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "ai",
+    "artificial intelligence",
+    "claude",
+    "gpt",
+    "gemini",
+    "code generation",
+    "automation",
+    "quality gates",
+    "team coordination",
+    "multi-agent",
+    "orchestration",
+    "development workflow",
+    "productivity",
+    "bandit routing",
+    "circuit breakers"
+  ],
+  "galleryBanner": {
+    "color": "#1e293b",
+    "theme": "dark"
+  },
+  "license": "MIT",
+  "badges": [
+    {
+      "url": "https://img.shields.io/badge/AI-Powered-blue",
+      "href": "https://krins.dev",
+      "description": "AI-Powered Development Platform"
+    }
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:claude-coordination.coordinate",
+    "workspaceContains:.claude-coordination"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "claude-coordination.coordinate",
+        "title": "Start Coordination Session",
+        "category": "Claude Coordination",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "claude-coordination.assignTask",
+        "title": "Assign Task to AI Team",
+        "category": "Claude Coordination",
+        "icon": "$(robot)"
+      },
+      {
+        "command": "claude-coordination.createProject",
+        "title": "Create Project from Template",
+        "category": "Claude Coordination",
+        "icon": "$(file-directory-create)"
+      },
+      {
+        "command": "claude-coordination.deploy",
+        "title": "Deploy to Production",
+        "category": "Claude Coordination",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "claude-coordination.toggleLock",
+        "title": "Toggle File Lock",
+        "category": "Claude Coordination",
+        "icon": "$(lock)"
+      },
+      {
+        "command": "claude-coordination.lockFile",
+        "title": "Lock Current File",
+        "category": "Claude Coordination",
+        "icon": "$(lock)"
+      },
+      {
+        "command": "claude-coordination.unlockFile",
+        "title": "Unlock Current File",
+        "category": "Claude Coordination",
+        "icon": "$(unlock)"
+      },
+      {
+        "command": "claude-coordination.runQualityGates",
+        "title": "Run Quality Gates",
+        "category": "Claude Coordination",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "claude-coordination.status",
+        "title": "Show Coordination Status",
+        "category": "Claude Coordination",
+        "icon": "$(info)"
+      },
+      {
+        "command": "claude-coordination.sendMessage",
+        "title": "Send Message to Team",
+        "category": "Claude Coordination",
+        "icon": "$(mail)"
+      },
+      {
+        "command": "claude-coordination.aiAssist",
+        "title": "Ask AI Assistant",
+        "category": "Claude Coordination",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "claude-coordination.openDashboard",
+        "title": "Open Web Dashboard",
+        "category": "Claude Coordination",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "claude-coordination.startOnboarding",
+        "title": "Setup & Onboarding Wizard",
+        "category": "Claude Coordination",
+        "icon": "$(star)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "claude-coordination.assignTask",
+        "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "claude-coordination.toggleLock",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "claude-coordination.aiAssist",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "claude-coordination.runQualityGates",
+        "key": "ctrl+shift+q",
+        "mac": "cmd+shift+q"
+      },
+      {
+        "command": "claude-coordination.status",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "resourceScheme == file",
+          "command": "claude-coordination.lockFile",
+          "alt": "claude-coordination.unlockFile",
+          "group": "claude-coordination@1"
+        },
+        {
+          "when": "resourceScheme == file",
+          "command": "claude-coordination.aiAssist",
+          "group": "claude-coordination@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "when": "resourceScheme == file",
+          "command": "claude-coordination.assignTask",
+          "group": "claude-coordination@1"
+        },
+        {
+          "when": "resourceScheme == file",
+          "command": "claude-coordination.toggleLock",
+          "group": "claude-coordination@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "claude-coordination.coordinate",
+          "when": "workspaceFolder"
+        },
+        {
+          "command": "claude-coordination.lockFile",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "claude-coordination.unlockFile",
+          "when": "editorIsOpen"
+        }
+      ]
+    },
+    "views": {
+      "claude-coordination": [
+        {
+          "id": "claude-coordination-status",
+          "name": "Coordination Status",
+          "when": "workspaceFolder"
+        },
+        {
+          "id": "claude-diff-preview",
+          "type": "webview",
+          "name": "Diff Preview",
+          "when": "workspaceFolder"
+        },
+        {
+          "id": "claude-quality-gate",
+          "type": "webview",
+          "name": "Quality Gate",
+          "when": "workspaceFolder"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claude-coordination",
+          "title": "Claude Coordination",
+          "icon": "$(sync)"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Claude Code Coordination",
+      "properties": {
+        "claude-coordination.autoStartSession": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start coordination session when opening workspace"
+        },
+        "claude-coordination.showFileDecorations": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show visual indicators for locked files"
+        },
+        "claude-coordination.enableNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notifications for coordination events"
+        },
+        "claude-coordination.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "URL of the coordination server"
+        },
+        "claude-coordination.magicCliPath": {
+          "type": "string",
+          "default": "magic",
+          "description": "Path to magic CLI executable"
+        },
+        "claude-coordination.webDashboardPort": {
+          "type": "number",
+          "default": 3000,
+          "description": "Port for web dashboard server"
+        }
+      }
+    },
+    "colors": [
+      {
+        "id": "claude-coordination.lockedFile",
+        "description": "Color for locked files",
+        "defaults": {
+          "dark": "#ff6b6b",
+          "light": "#e74c3c"
+        }
+      },
+      {
+        "id": "claude-coordination.activeSession",
+        "description": "Color for active coordination session",
+        "defaults": {
+          "dark": "#4ecdc4",
+          "light": "#1abc9c"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "echo 'Skipping compile - using existing JS files'",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "typescript": "^4.9.4",
+    "@vscode/test-electron": "^2.2.0"
+  },
+  "dependencies": {
+    "@claude-coordination/shared": "workspace:*",
+    "ws": "^8.14.2",
+    "chokidar": "^3.5.3",
+    "socket.io-client": "^4.8.1",
+    "axios": "^1.5.0"
+  }
+}

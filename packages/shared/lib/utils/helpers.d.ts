@@ -1,0 +1,21 @@
+export declare function generateId(): string;
+export declare function formatDate(date: Date, format?: 'short' | 'medium' | 'long'): string;
+export declare function formatTime(date: Date, includeSeconds?: boolean): string;
+export declare function formatDuration(milliseconds: number): string;
+export declare function formatBytes(bytes: number): string;
+export declare function formatCurrency(amount: number, currency?: string): string;
+export declare function formatPercentage(value: number, decimals?: number): string;
+export declare function sleep(ms: number): Promise<void>;
+export declare function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void;
+export declare function throttle<T extends (...args: any[]) => any>(func: T, limit: number): (...args: Parameters<T>) => void;
+export declare function retry<T>(fn: () => Promise<T>, maxAttempts: number, delay?: number): Promise<T>;
+export declare function pick<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K>;
+export declare function omit<T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K>;
+export declare function isEmpty(value: any): boolean;
+export declare function isObject(value: any): value is Record<string, any>;
+export declare function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T;
+export declare function clamp(value: number, min: number, max: number): number;
+export declare function random(min: number, max: number): number;
+export declare function sanitizeString(str: string): string;
+export declare function truncate(str: string, length: number, suffix?: string): string;
+//# sourceMappingURL=helpers.d.ts.map

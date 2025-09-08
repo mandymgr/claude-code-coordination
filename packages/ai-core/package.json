@@ -1,0 +1,32 @@
+{
+  "name": "@claude-coordination/ai-core",
+  "version": "3.0.0",
+  "description": "AI orchestration and coordination components",
+  "main": "src/enhanced-magic-cli.cjs",
+  "type": "commonjs",
+  "scripts": {
+    "build": "echo 'CJS files - no build needed'",
+    "start": "node src/enhanced-magic-cli.cjs",
+    "magic-cli": "node src/enhanced-magic-cli.cjs",
+    "ai-assist": "node src/adaptive-ai-assistant.cjs",
+    "deploy-engine": "node src/magic-deployment-engine.cjs",
+    "dashboard": "node src/dashboard-server.cjs",
+    "realtime-hub": "node src/realtime-hub.cjs"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "axios": "^1.5.0",
+    "openai": "^4.8.0",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "chalk": "^4.1.2",
+    "inquirer": "^8.2.6",
+    "ws": "^8.14.2",
+    "chokidar": "^3.5.3",
+    "commander": "^11.1.0"
+  },
+  "keywords": ["ai", "coordination", "claude", "automation"],
+  "author": "Claude Code Coordination",
+  "license": "MIT"
+}

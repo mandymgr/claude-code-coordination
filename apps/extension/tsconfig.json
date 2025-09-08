@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2020",
+    "outDir": "./out",
+    "lib": ["ES2020", "DOM"],
+    "sourceMap": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "noEmit": false,
+    "types": ["vscode", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@claude-coordination/shared": ["../../packages/shared/src/index.ts"],
+      "@claude-coordination/ai-core": ["../../packages/ai-core/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["out", "node_modules", "**/*.test.ts"]
+}
