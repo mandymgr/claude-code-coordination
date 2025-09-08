@@ -48,11 +48,7 @@
     "dist", 
     "**/*.test.ts",
     "**/*.spec.ts",
-    "**/*.backup",
-    "**/services-*/**/*",
-    "src/services/dev-tools/**/*",
-    "src/services/monitoring/**/*",
-    "src/services/enterprise/commercial/**/*"
+    "**/*.backup"
   ],
   "references": [
     { "path": "../../packages/shared" },
