@@ -1,0 +1,35 @@
+{
+  "name": "krins-universe-builder",
+  "version": 2,
+  "builds": [
+    {
+      "src": "apps/frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/apps/frontend/dist/index.html"
+    }
+  ],
+  "buildCommand": "cd apps/frontend && npm run build",
+  "outputDirectory": "apps/frontend/dist",
+  "installCommand": "npm install && cd apps/frontend && npm install",
+  "framework": "vite",
+  "regions": ["iad1"],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "apps/backend/src/server.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
+}
