@@ -9,8 +9,9 @@
     "magic": "packages/cli/dist/magic-cli.js"
   },
   "scripts": {
-    "build": "pnpm run build:packages && npm run package",
+    "build": "pnpm run build:packages:fast && npm run package",
     "build:packages": "pnpm --filter=\"@claude-coordination/*\" run build",
+    "build:packages:fast": "pnpm --filter=\"@claude-coordination/shared\" run build && pnpm --parallel --filter=\"@claude-coordination/*\" --filter=\"!@claude-coordination/shared\" run build",
     "dev": "pnpm --filter=\"@claude-coordination/backend\" run dev",
     "dev:all": "pnpm --parallel --filter=\"@claude-coordination/*\" run dev",
     "start": "pnpm --filter=\"@claude-coordination/backend\" run start",

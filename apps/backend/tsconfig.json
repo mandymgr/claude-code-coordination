@@ -6,19 +6,34 @@
     "moduleResolution": "node",
     "outDir": "./dist",
     "rootDir": "./src",
+    
+    // Build Performance Optimization
+    "incremental": true,
+    "composite": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    
+    // Type Checking Performance  
     "strict": false,
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    
+    // Output Optimization
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "removeComments": true,
+    "importsNotUsedAsValues": "remove",
+    
+    // Relaxed Type Checking for Speed
     "noImplicitAny": false,
     "noImplicitReturns": false,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": false,
     "exactOptionalPropertyTypes": false,
+    
+    // Module Resolution
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
@@ -30,9 +45,14 @@
   ],
   "exclude": [
     "node_modules",
-    "dist",
+    "dist", 
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "**/*.backup"
+  ],
+  "references": [
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/cli" }
   ],
   "ts-node": {
     "esm": false,
