@@ -1,1 +1,0 @@
-export { VoiceInterface } from './voiceInterface';
