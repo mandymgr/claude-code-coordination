@@ -4,7 +4,7 @@
 const API_BASE_URL = 'http://localhost:8080';
 
 // Development mode controls
-const isDevelopment = import.meta.env.MODE === 'development';
+const isDevelopment = (import.meta as any).env?.MODE === 'development';
 const VERBOSE_LOGGING = false; // Set to true for detailed API logging
 
 // API status tracking

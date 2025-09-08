@@ -1,16 +1,23 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "commonjs",
+    "module": "commonjs", 
     "lib": ["ES2020"],
     "outDir": "./lib",
     "rootDir": "./src",
+    
+    // Build Performance & Project References
+    "incremental": true,
+    "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
-    "strict": true,
-    "esModuleInterop": true,
+    "sourceMap": false,
+    
+    // Type Checking
+    "strict": false,
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,

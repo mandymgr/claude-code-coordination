@@ -1,5 +1,23 @@
-import { ethers, Contract, JsonRpcProvider, Wallet, TransactionResponse, TransactionReceipt } from 'ethers';
 import { EventEmitter } from 'events';
+
+// Lazy load ethers.js only when needed
+let ethers: typeof import('ethers') | null = null;
+
+async function ensureEthers() {
+  if (!ethers) {
+    console.log('⛓️ Loading Ethers.js on-demand...');
+    ethers = await import('ethers');
+    console.log('✅ Ethers.js loaded successfully');
+  }
+  return ethers;
+}
+
+// Type aliases for better intellisense
+type Contract = import('ethers').Contract;
+type JsonRpcProvider = import('ethers').JsonRpcProvider;
+type Wallet = import('ethers').Wallet;
+type TransactionResponse = import('ethers').TransactionResponse;
+type TransactionReceipt = import('ethers').TransactionReceipt;
 
 interface BlockchainConfig {
   networks: {

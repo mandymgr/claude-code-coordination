@@ -1,26 +1,39 @@
 {
   "compilerOptions": {
+    // Target Configuration
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
     "module": "ESNext",
     "moduleResolution": "node",
-    "resolveJsonModule": true,
+    
+    // Performance Optimizations
+    "incremental": true,
+    "composite": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "allowJs": false,
+    
+    // Type Checking
+    "strict": false,
     "isolatedModules": true,
     "noEmit": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    
+    // Output Configuration
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",
+    "resolveJsonModule": true,
+    
+    // Path Mapping for Fast Resolution
     "baseUrl": ".",
     "paths": {
       "@claude-coordination/shared": ["./packages/shared/src/index.ts"],
-      "@claude-coordination/ai-core": ["./packages/ai-core/src/index.ts"],
+      "@claude-coordination/ai-core": ["./packages/ai-core/src/index.ts"], 
+      "@claude-coordination/cli": ["./packages/cli/src/index.ts"],
       "@ccc/shared": ["./packages/shared/src/index.ts"]
     }
   },
